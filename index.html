@@ -913,84 +913,120 @@
     </div>
 
     <!-- Bank -->
-    <div id="bank" class="view-pane">
-      <h3 style="margin-bottom:10px;color:var(--primary-gold);font-size:1rem;"><i class="fa-solid fa-building-columns"></i> البنك والراتب</h3>
-      <div class="card"><div id="bank-my-box"></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"><input id="bank-account-input" class="input-field" placeholder="رقم الحساب البنكي" style="margin:0;flex:1;min-width:180px;"><button class="btn-action" style="margin:0;" onclick="saveBankAccount()">حفظ الحساب</button></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"><button id="duty-start-btn" class="btn-action" style="margin:0;" onclick="startDuty()">باشر الخدمة</button><button id="duty-end-btn" class="btn-action" style="margin:0;background:#111827;border-color:var(--red-alert);color:var(--red-alert);" onclick="endDuty()">إنهاء المباشرة</button></div></div>
-      <div id="bank-command-box" class="card" style="display:none;border-color:var(--primary-gold);"><h4 style="color:var(--primary-gold);">إدارة الرواتب والأرصدة</h4><div id="bank-command-content"></div></div>
-      const bankControls =
-  document.getElementById(
-    'bank-management-controls'
-  );
+<div id="bank" class="view-pane">
+  <h3 style="margin-bottom:10px;color:var(--primary-gold);font-size:1rem;">
+    <i class="fa-solid fa-building-columns"></i> البنك والراتب
+  </h3>
 
-if (bankControls) {
-  bankControls.style.display =
-    currentUser &&
-    normalizeRank(currentUser.rank) ===
-      'CIA CHIEF'
-      ? 'block'
-      : 'none';
-}
-      <div id="bank-command-content"></div>
+  <div class="card">
+    <div id="bank-my-box"></div>
 
-<div
-  id="bank-management-controls"
-  style="display:none;margin-top:10px;"
->
-  <input
-    id="bank-target-code"
-    class="input-field"
-    placeholder="كود الشخص"
-  >
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+      <input
+        id="bank-account-input"
+        class="input-field"
+        placeholder="رقم الحساب البنكي"
+      >
 
-  <input
-    id="bank-deduction-amount"
-    class="input-field"
-    type="number"
-    min="1"
-    placeholder="مبلغ الخصم"
-  >
+      <button
+        type="button"
+        class="btn-action"
+        onclick="saveBankAccount()"
+      >
+        حفظ الحساب البنكي
+      </button>
 
-  <button
-    type="button"
-    class="btn-action"
-    onclick="manageBank('freeze')"
-  >
-    تجميد الحساب
-  </button>
+      <input
+        id="bank-withdraw-amount"
+        class="input-field"
+        type="number"
+        min="1"
+        placeholder="مبلغ السحب"
+      >
 
-  <button
-    type="button"
-    class="btn-action"
-    onclick="manageBank('unfreeze')"
-  >
-    فك تجميد الحساب
-  </button>
-
-  <button
-    type="button"
-    class="btn-action"
-    onclick="manageBank('stop-salary')"
-  >
-    إيقاف الراتب
-  </button>
-
-  <button
-    type="button"
-    class="btn-action"
-    onclick="manageBank('start-salary')"
-  >
-    إعادة الراتب
-  </button>
-
-  <button
-    type="button"
-    class="btn-action"
-    onclick="manageBank('deduct')"
-  >
-    خصم من الرصيد
-  </button>
-</div>
+      <button
+        type="button"
+        class="btn-action"
+        onclick="withdrawBankMoney()"
+      >
+        سحب
+      </button>
     </div>
+  </div>
+
+  <div
+    id="bank-command-box"
+    class="card"
+    style="display:none;border-color:var(--primary-gold);"
+  >
+    <h4 style="color:var(--primary-gold);">
+      إدارة الرواتب والأرصدة
+    </h4>
+
+    <div id="bank-command-content"></div>
+
+    <div
+      id="bank-management-controls"
+      style="display:none;margin-top:10px;"
+    >
+      <input
+        id="bank-target-code"
+        class="input-field"
+        placeholder="كود الشخص"
+      >
+
+      <input
+        id="bank-deduction-amount"
+        class="input-field"
+        type="number"
+        min="1"
+        placeholder="مبلغ الخصم"
+      >
+
+      <button
+        type="button"
+        class="btn-action"
+        onclick="manageBank('freeze')"
+      >
+        تجميد الحساب
+      </button>
+
+      <button
+        type="button"
+        class="btn-action"
+        onclick="manageBank('unfreeze')"
+      >
+        فك تجميد الحساب
+      </button>
+
+      <button
+        type="button"
+        class="btn-action"
+        onclick="manageBank('stop-salary')"
+      >
+        إيقاف الراتب
+      </button>
+
+      <button
+        type="button"
+        class="btn-action"
+        onclick="manageBank('start-salary')"
+      >
+        إعادة الراتب
+      </button>
+
+      <button
+        type="button"
+        class="btn-action"
+        onclick="manageBank('deduct')"
+      >
+        خصم من الرصيد
+      </button>
+    </div>
+  </div>
+</div>
+    
+
 
     <!-- Chief Panel -->
     <div id="chief-panel" class="view-pane">
