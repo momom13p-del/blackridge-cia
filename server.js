@@ -1054,7 +1054,6 @@ function dailySalary(user) {
 ) {
   return null;
 }
-}
   // الراتب لا يُصرف إلا للشخصية التي سجلت دخولها/دخلت الخدمة، ومرة كل 24 ساعة.
   if (
     !user.online ||
@@ -4362,8 +4361,6 @@ if (
     'الرصيد غير كافٍ.'
   );
 }
-      }
-
       actor.bank.balance -=
         amount;
 
