@@ -1217,11 +1217,14 @@ frozen:
 salaryEnabled:
   user.bank.salaryEnabled !== false,
 
-bankCode:
-  self || leadership
-    ? user.bank.bankCode || null
-    : null
+  bankCode:
+    self || leadership
+      ? user.bank.bankCode || null
+      : null
+  };
 }
+ 
+function canSetSalary(
 
 function canSetSalary(
   actor,
