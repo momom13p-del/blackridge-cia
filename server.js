@@ -1049,12 +1049,12 @@ function dailySalary(user) {
   ensureBank(user);
 
   if (
-  user.bank.frozen ||
-  user.bank.salaryEnabled === false
-) {
-  return null;
-}
-  // الراتب لا يُصرف إلا للشخصية التي سجلت دخولها/دخلت الخدمة، ومرة كل 24 ساعة.
+    user.bank.frozen ||
+    user.bank.salaryEnabled === false
+  ) {
+    return null;
+  }
+
   if (
     !user.online ||
     !user.lastLoginAt
@@ -1062,34 +1062,24 @@ function dailySalary(user) {
     return null;
   }
 
-  const lastSalary =
-    user.bank.lastSalaryAt
-      ? new Date(
-          user.bank.lastSalaryAt
-        ).getTime()
-      : 0;
+  const lastSalary = user.bank.lastSalaryAt
+    ? new Date(user.bank.lastSalaryAt).getTime()
+    : 0;
 
-  const dayMs =
-    24 * 60 * 60 * 1000;
+  const dayMs = 24 * 60 * 60 * 1000;
 
   if (
     lastSalary &&
-    Date.now() - lastSalary <
-      dayMs
+    Date.now() - lastSalary < dayMs
   ) {
-    user.bank.salaryClaimedToday =
-      true;
-
+    user.bank.salaryClaimedToday = true;
     return null;
   }
 
-  const amount =
-    Math.max(
-      0,
-      Math.floor(
-        Number(user.bank.salary) || 0
-      )
-    );
+  const amount = Math.max(
+    0,
+    Math.floor(Number(user.bank.salary) || 0)
+  );
 
   user.bank.balance += amount;
   user.bank.lastSalaryAt = now();
@@ -1168,12 +1158,8 @@ function bankView(
 ) {
   ensureBank(user);
 
-  const leadership =
-    isLeadership(viewer);
-
-  const self =
-    !!viewer &&
-    viewer.id === user.id;
+  const leadership = isLeadership(viewer);
+  const self = !!viewer && viewer.id === user.id;
 
   return {
     id: user.id,
@@ -1189,8 +1175,7 @@ function bankView(
         ? user.name
         : '',
 
-    rank:
-      normalizeRank(user.rank),
+    rank: normalizeRank(user.rank),
 
     balance:
       self || leadership
@@ -1202,25 +1187,24 @@ function bankView(
         ? user.bank.salary
         : null,
 
-    online:
-      !!user.online,
+    online: !!user.online,
 
     lastSalaryAt:
       user.bank.lastSalaryAt || null,
 
     salaryClaimedToday:
-  !!user.bank.salaryClaimedToday,
+      !!user.bank.salaryClaimedToday,
 
-frozen:
-  !!user.bank.frozen,
+    frozen:
+      !!user.bank.frozen,
 
-salaryEnabled:
-  user.bank.salaryEnabled !== false,
+    salaryEnabled:
+      user.bank.salaryEnabled !== false,
 
-  bankCode:
-    self || leadership
-      ? user.bank.bankCode || null
-      : null
+    bankCode:
+      self || leadership
+        ? user.bank.bankCode || null
+        : null
   };
 }
 
