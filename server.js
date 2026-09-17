@@ -1223,8 +1223,6 @@ salaryEnabled:
       : null
   };
 }
- 
-function canSetSalary(
 
 function canSetSalary(
   actor,
