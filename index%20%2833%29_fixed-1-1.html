@@ -1,0 +1,3120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BLACK RIDGE CITY CIA SYSTEM - GTA V</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg-dark: #05070a;
+      --panel-bg: rgba(11, 15, 25, 0.92);
+      --card-bg: rgba(17, 24, 39, 0.85);
+      --border: #1f293d;
+      --primary-gold: #f59e0b;
+      --red-alert: #ef4444;
+      --cyan-glow: #06b6d4;
+      --green-status: #10b981;
+      --purple-vip: #8b5cf6;
+      --text-bright: #f3f4f6;
+      --text-dim: #9ca3af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    
+    body { 
+      background-color: var(--bg-dark); 
+      color: var(--text-bright); 
+      min-height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+      overflow-x: hidden;
+      position: relative;
+    }
+    
+    body::before {
+      content: "";
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 380px; height: 380px;
+      background: url('https://upload.wikimedia.org/wikipedia/commons/2/25/Seal_of_the_Central_Intelligence_Agency.svg') no-repeat center center;
+      background-size: contain;
+      opacity: 0.04; z-index: 0; pointer-events: none;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(5, 7, 10, 0.98); backdrop-filter: blur(8px);
+      display: flex; justify-content: center; align-items: center; z-index: 10000; padding: 20px;
+    }
+    .auth-card {
+      background: var(--panel-bg); border: 1px solid var(--primary-gold); padding: 25px;
+      border-radius: 12px; text-align: center; width: 100%; max-width: 400px;
+    }
+    .auth-card h2 { color: var(--primary-gold); font-size: 1.2rem; margin-bottom: 2px; }
+    .input-field { width: 100%; padding: 12px; margin: 8px 0; background: #000; border: 1px solid var(--border); color: var(--cyan-glow); text-align: center; font-size: 0.95rem; outline: none; border-radius: 6px; }
+    .btn-action { width: 100%; padding: 12px; background: var(--primary-gold); color: #000; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; font-size: 1rem; margin-top: 10px; }
+
+    /* Red Screen Banner */
+    #sos-screen-banner {
+      position: fixed; inset: 0; background: rgba(0,0,0,.62); backdrop-filter: blur(3px);
+      z-index: 99999; display: none; justify-content: center; align-items: center; padding: 18px; text-align: center;
+    }
+    .sos-alert-card {
+      width: min(560px, 92vw); max-height: 82vh; overflow:auto; background: rgba(35,5,8,.96);
+      border: 1px solid rgba(239,68,68,.75); border-top: 4px solid var(--red-alert); border-radius: 10px;
+      box-shadow: 0 0 35px rgba(239,68,68,.18); padding: 18px; animation: sosCardPulse 1.2s infinite alternate;
+    }
+    @keyframes sosCardPulse { from { box-shadow: 0 0 20px rgba(239,68,68,.10); } to { box-shadow: 0 0 34px rgba(239,68,68,.28); } }
+    .sos-list-card { border:1px solid rgba(239,68,68,.42); border-right:3px solid var(--red-alert); background:rgba(20,5,8,.72); padding:10px; border-radius:6px; margin-bottom:8px; }
+    .sos-list-card .sos-meta { color:var(--text-dim); font-size:.66rem; line-height:1.7; }
+    .sos-list-card .sos-main { color:var(--text-bright); font-size:.76rem; line-height:1.7; white-space:pre-wrap; }
+    .dashboard-alerts-card { margin:0 0 15px; padding:14px; border:1px solid rgba(239,68,68,.55); border-right:4px solid var(--red-alert); border-radius:10px; background:linear-gradient(145deg,rgba(21,9,12,.98),rgba(7,10,15,.98)); box-shadow:inset 0 0 25px rgba(239,68,68,.035),0 10px 25px rgba(0,0,0,.28); cursor:pointer; outline:none; }
+    .dashboard-alerts-card:hover { border-color:rgba(239,68,68,.85); transform:translateY(-1px); transition:.15s ease; }
+    .dashboard-alerts-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .dashboard-alerts-kicker { font:700 .52rem monospace; letter-spacing:1.8px; color:rgba(239,68,68,.72); }
+    .dashboard-alerts-title { color:#fff; font-weight:900; font-size:.95rem; margin-top:3px; }
+    .dashboard-alerts-title i { color:var(--red-alert); margin-left:5px; }
+    .dashboard-alert-count { min-width:42px; height:42px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(239,68,68,.55); border-radius:8px; color:#fff; background:rgba(127,29,29,.32); font:900 1rem monospace; }
+    .dashboard-alert-preview { margin-top:10px; padding:9px 10px; border:1px solid #242d3c; border-radius:6px; background:#080b10; color:var(--text-dim); font-size:.69rem; line-height:1.7; }
+    .dashboard-alerts-footer { margin-top:8px; display:flex; justify-content:space-between; gap:8px; color:#6f7a89; font-size:.58rem; font-family:monospace; }
+    #sos-screen-banner { position:fixed; inset:0; background:rgba(2,4,7,.94); backdrop-filter:blur(10px); z-index:99999; display:none; align-items:center; justify-content:center; padding:18px; overflow:auto; }
+    .sos-alert-scanline { position:absolute; inset:0; pointer-events:none; opacity:.32; background:repeating-linear-gradient(0deg,transparent 0,transparent 3px,rgba(255,255,255,.018) 4px); }
+    .sos-alert-card { position:relative; width:min(680px,96vw); padding:18px; border:1px solid rgba(239,68,68,.72); border-top:3px solid var(--red-alert); border-radius:12px; background:linear-gradient(145deg,#0a0d12,#05070a); box-shadow:0 0 0 1px rgba(255,255,255,.025) inset,0 22px 70px rgba(0,0,0,.6),0 0 35px rgba(239,68,68,.10); text-align:center; }
+    .sos-alert-top { display:flex; justify-content:space-between; gap:8px; color:#9aa4b3; font:700 .56rem monospace; letter-spacing:1.4px; }
+    .sos-alert-brand { color:var(--primary-gold); }
+    .sos-alert-channel { color:#7f8a9a; }
+    .sos-alert-divider { height:1px; margin:11px 0 13px; background:linear-gradient(90deg,transparent,rgba(239,68,68,.65),transparent); }
+    .sos-alert-icon { width:62px; height:62px; margin:0 auto 8px; border:1px solid rgba(239,68,68,.6); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--red-alert); font-size:1.8rem; background:rgba(127,29,29,.14); box-shadow:0 0 25px rgba(239,68,68,.09); }
+    .sos-alert-kicker { color:#ef9a9a; font:700 .55rem monospace; letter-spacing:2px; }
+    .sos-alert-card h1 { color:#fff; font-size:1.65rem; margin:5px 0 7px; }
+    .sos-alert-badge { display:inline-flex; padding:4px 8px; border:1px solid rgba(239,68,68,.65); border-radius:4px; color:#fca5a5; background:rgba(127,29,29,.18); font:900 .58rem monospace; letter-spacing:1px; }
+    .sos-banner-content { margin:14px 0 12px; padding:12px; border:1px solid #28313e; border-right:3px solid var(--red-alert); border-radius:7px; background:#070a0e; color:#e6e9ee; text-align:right; white-space:pre-wrap; line-height:1.85; font-size:.78rem; }
+    .sos-alert-actions { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
+    .sos-alert-actions button { padding:9px 16px; border:1px solid #4b5665; border-radius:5px; background:#eceff3; color:#090c10; font-weight:900; cursor:pointer; }
+    .sos-alert-actions span { color:#939dab; font:700 .66rem monospace; }
+
+
+    /* Header */
+    .mobile-header { height: 60px; background: var(--panel-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; position: sticky; top: 0; z-index: 100; }
+    .brand-title { color: var(--primary-gold); font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
+    .menu-toggle { font-size: 1.4rem; color: var(--primary-gold); cursor: pointer; }
+
+    .sos-btn {
+      background: var(--red-alert); color: #fff; border: none; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    /* Sidebar */
+    .sidebar { position: fixed; top: 0; right: -280px; width: 280px; height: 100%; background: var(--panel-bg); border-left: 1px solid var(--border); transition: 0.3s ease; z-index: 1000; display: flex; flex-direction: column; }
+    .sidebar.open { right: 0; }
+    .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); display: none; z-index: 999; }
+    .sidebar-overlay.open { display: block; }
+
+    .nav-list { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+    .nav-btn { padding: 12px 20px; display: flex; align-items: center; gap: 12px; color: var(--text-dim); cursor: pointer; border-right: 3px solid transparent; font-size: 0.85rem; }
+    .nav-btn.active { background: rgba(245, 158, 11, 0.1); color: var(--text-bright); border-right-color: var(--primary-gold); }
+    .nav-btn i { color: var(--primary-gold); width: 20px; }
+
+    /* Content Area */
+    .content-area { flex: 1; padding: 15px; overflow-y: auto; position: relative; z-index: 1; }
+    .view-pane { display: none; }
+    .view-pane.active { display: block; }
+
+    /* Cards */
+    .card { background: var(--panel-bg); border: 1px solid var(--border); padding: 15px; border-radius: 8px; margin-bottom: 15px; position: relative; overflow: hidden; }
+    .card-watermark { position: absolute; right: 10px; bottom: 5px; font-size: 3rem; color: rgba(255,255,255,0.02); pointer-events: none; }
+
+    .table-container { overflow-x: auto; }
+    .table-custom { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 300px; }
+    .table-custom th, .table-custom td { padding: 10px; text-align: right; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
+    .table-custom th { background: var(--card-bg); color: var(--primary-gold); }
+
+    .status-btn { padding: 6px 10px; border-radius: 4px; font-size: 0.75rem; border: none; font-weight: bold; cursor: pointer; }
+    .status-patrol { background: rgba(16, 185, 129, 0.2); color: var(--green-status); border: 1px solid var(--green-status); }
+    .status-siad { background: rgba(245, 158, 11, 0.2); color: var(--primary-gold); border: 1px solid var(--primary-gold); }
+    .status-off { background: rgba(239, 68, 68, 0.2); color: var(--red-alert); border: 1px solid var(--red-alert); }
+
+    /* Map GTA Styling */
+    #gta-map { height: 400px; width: 100%; border-radius: 8px; border: 2px solid var(--primary-gold); background: #0fa8d7; margin-top: 10px; }
+
+    /* Radio Interface */
+    .radio-card {
+      background: radial-gradient(circle, rgba(17,24,39,1) 0%, rgba(5,7,10,1) 100%);
+      border: 2px solid var(--primary-gold); border-radius: 12px; padding: 20px; text-align: center;
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+    }
+    .radio-screen {
+      background: #000; border: 1px solid var(--cyan-glow); padding: 15px; border-radius: 8px;
+      font-family: monospace; color: var(--cyan-glow); margin-bottom: 15px; box-shadow: inset 0 0 8px rgba(6, 182, 212, 0.3);
+    }
+
+    /* Chat Styling */
+    .chat-box { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 8px; height: 380px; display: flex; flex-direction: column; }
+    .chat-messages { flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    .msg-card { background: var(--card-bg); padding: 8px 12px; border-radius: 6px; border-right: 3px solid var(--cyan-glow); font-size: 0.85rem; position: relative; }
+    .msg-sos { border-right-color: var(--red-alert); background: rgba(239, 68, 68, 0.15); border: 1px solid var(--red-alert); }
+    
+    .badge-rank { padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+    .rank-chief { background: var(--primary-gold); color: #000; }
+    .rank-high { background: var(--purple-vip); color: #fff; }
+    .rank-supreme { background:#b91c1c; color:#fff; box-shadow:0 0 8px rgba(185,28,28,.35); }
+    .rank-agent { background: var(--cyan-glow); color: #000; }
+
+    .cia-logo { width: 50px; height: 50px; margin-bottom: 8px; }
+    .cia-header-logo { width: 28px; height: 28px; }
+    .city-tag { font-size: 0.65rem; color: var(--cyan-glow); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; display: block; }
+    .delete-btn { position: absolute; left: 8px; top: 8px; color: var(--red-alert); cursor: pointer; font-size: 0.8rem; }
+
+    /* HANDHELD RADIO - reference-inspired vertical device */
+    .radio-device {
+      width: min(100%, 360px) !important;
+      min-height: 650px !important;
+      margin: 10px auto 24px !important;
+      padding: 16px 14px 18px !important;
+      border: 2px solid #303b4b !important;
+      border-radius: 24px !important;
+      background: linear-gradient(160deg, #2a3038 0%, #11161c 28%, #070a0e 100%) !important;
+      box-shadow: 0 18px 45px rgba(0,0,0,.55), inset 0 0 30px rgba(255,255,255,.025) !important;
+      position: relative !important;
+      overflow: visible !important;
+    }
+    .radio-device:before {
+      content: "";
+      position: absolute;
+      top: -70px !important;
+      left: auto !important;
+      right: 34px !important;
+      width: 9px !important;
+      height: 78px !important;
+      background: linear-gradient(#1f2937, #080b10) !important;
+      border: 2px solid #3b4655 !important;
+      border-radius: 7px 7px 2px 2px !important;
+      opacity: 1 !important;
+      box-shadow: 0 -4px 0 #111827 !important;
+    }
+    .radio-device:after {
+      content: "";
+      position: absolute;
+      top: -13px;
+      right: 24px;
+      width: 30px;
+      height: 18px;
+      border: 3px solid #596474;
+      border-radius: 50% 50% 5px 5px;
+      background: #151a21;
+      box-shadow: inset 0 0 8px #000;
+    }
+    .radio-top-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 4px 5px 12px !important;
+      border-bottom: 1px solid #3b4655 !important;
+    }
+    .radio-brand {
+      font-size: .58rem !important;
+      letter-spacing: 1.2px !important;
+      color: #9aa6b5 !important;
+      font-family: monospace;
+    }
+    .radio-power-indicator {
+      padding: 4px 7px;
+      border: 1px solid var(--red-alert);
+      border-radius: 4px;
+      color: var(--red-alert);
+      font-weight: 800;
+      font-size: .55rem !important;
+      background: #090c10 !important;
+      font-family: monospace;
+    }
+    .radio-power-indicator.on {
+      border-color: var(--primary-gold) !important;
+      color: var(--primary-gold) !important;
+      box-shadow: 0 0 10px rgba(245,158,11,.18) !important;
+    }
+    .radio-display-frame {
+      margin: 8px 4px 12px !important;
+      min-height: 190px !important;
+      padding: 12px !important;
+      border: 3px solid #465263 !important;
+      border-radius: 8px !important;
+      background: linear-gradient(#0b100d, #020403) !important;
+      box-shadow: inset 0 0 28px rgba(0,0,0,.9), inset 0 0 15px rgba(120,150,100,.08) !important;
+    }
+    .radio-display-header {
+      display: flex;
+      justify-content: space-between;
+      color: #687466 !important;
+      font-family: monospace;
+      font-size: .65rem;
+    }
+    .radio-frequency {
+      font-family: monospace;
+      font-size: clamp(2.8rem, 15vw, 4rem) !important;
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: #d5ddcf !important;
+      text-shadow: 0 0 8px rgba(200,220,190,.25) !important;
+      text-align: center;
+      margin: 18px 0 9px !important;
+    }
+    .radio-status {
+      text-align: center;
+      color: #aebaa8 !important;
+      font-size: .72rem !important;
+      font-weight: 700;
+    }
+    .radio-status.off { color: #c35a5a !important; }
+    .radio-activity {
+      text-align: center;
+      color: #737d74 !important;
+      font-size: .68rem;
+      margin-top: 8px;
+      min-height: 18px;
+    }
+    .radio-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px !important;
+      padding: 10px 2px 14px !important;
+    }
+    .radio-small-btn {
+      min-width: 42px;
+      height: 36px;
+      padding: 6px 9px;
+      background: linear-gradient(#252b33, #0d1116) !important;
+      border: 1px solid #596474 !important;
+      color: #d8dde5 !important;
+      border-radius: 7px !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08) !important;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: .72rem;
+    }
+    .radio-small-btn:hover { border-color: var(--cyan-glow); color: var(--cyan-glow); }
+    .radio-small-btn.power-btn {
+      min-width: 148px !important;
+      background: linear-gradient(#3a4048, #171c22) !important;
+      color: #fff !important;
+      border-color: var(--primary-gold) !important;
+      box-shadow: 0 0 10px rgba(245,158,11,.1) !important;
+    }
+    .radio-small-btn.power-btn.off-state {
+      background: linear-gradient(#3a1d22, #16090c) !important;
+      border-color: var(--red-alert) !important;
+      color: #fff !important;
+    }
+    .radio-interactive {
+      border-top: 1px solid #303b49 !important;
+      padding-top: 8px;
+    }
+    .radio-section-title {
+      font-size: .72rem;
+      color: #d49a22 !important;
+      font-weight: 800;
+      margin: 13px 0 7px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .radio-channel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    .radio-channel-btn {
+      padding: 9px 6px;
+      background: #0c1117 !important;
+      border: 1px solid #3b4655 !important;
+      border-radius: 5px;
+      color: var(--text-bright);
+      cursor: pointer;
+      text-align: center;
+    }
+    .radio-channel-btn strong { display: block; color: var(--cyan-glow); font-family: monospace; font-size: .9rem; }
+    .radio-channel-btn span { font-size: .63rem; color: var(--text-dim); }
+    .radio-channel-btn.active { border-color: var(--primary-gold) !important; background: #17150f !important; }
+
+    .radio-talk-row { display: flex; justify-content: center; align-items: center; gap: 15px; padding: 3px 0; }
+    .ptt-btn {
+      width: 92px !important;
+      height: 92px !important;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #3c4652, #11161c 65%) !important;
+      border: 4px solid #6c7785 !important;
+      color: #e2e6eb !important;
+      box-shadow: 0 7px 16px rgba(0,0,0,.45), inset 0 2px 5px rgba(255,255,255,.08) !important;
+      font-size: .7rem !important;
+      cursor: pointer;
+    }
+    .ptt-btn i { display: block; font-size: 1.25rem; margin-bottom: 3px; }
+    .ptt-btn span { font-weight: 900; }
+    .ptt-btn:active { transform: scale(.94) !important; background: #252d36 !important; }
+
+    .radio-talk-hint { font-size: .68rem; color: var(--text-dim); line-height: 1.65; }
+    .radio-talk-hint strong { color: var(--cyan-glow); }
+
+    .radio-text-row { display: flex; gap: 7px; }
+    .radio-text-row input { flex: 1; min-width: 0; background: #020406; border: 1px solid #344154; border-radius: 5px; padding: 9px; color: var(--text-bright); outline: none; font-size: .75rem; }
+    .radio-text-row input:focus { border-color: var(--cyan-glow); box-shadow: 0 0 8px rgba(6,182,212,.12); }
+    .radio-send-btn { padding: 8px 12px; background: #303944 !important; color: #fff !important; border: 1px solid #697585 !important; border-radius: 5px; font-weight: 900; cursor: pointer; font-size: .72rem; }
+
+    .radio-codes-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .radio-code-btn { min-height: 65px; padding: 7px 4px; background: #070a0f; border: 1px solid #263447; border-radius: 5px; color: var(--text-bright); cursor: pointer; text-align: center; transition: .15s; }
+    .radio-code-btn strong { display: block; color: var(--primary-gold); font-family: monospace; font-size: .88rem; }
+    .radio-code-btn span { display: block; font-size: .57rem; color: var(--text-dim); line-height: 1.3; margin-top: 4px; }
+    .radio-code-btn:hover { border-color: var(--primary-gold); transform: translateY(-1px); background: #151a20 !important; }
+    .radio-code-btn:active { transform: translateY(0); }
+
+    .radio-live-log { margin-top: 12px; padding-top: 4px; border-top: 1px dashed #263447; }
+    .radio-live-log-list { max-height: 145px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+    .radio-log-item { padding: 6px 8px; background: #05070a; border-right: 2px solid var(--cyan-glow); border-radius: 3px; font-size: .67rem; line-height: 1.4; }
+    .radio-log-item .radio-log-meta { color: var(--text-dim); font-size: .57rem; }
+    .radio-empty { color: var(--text-dim); font-size: .65rem; text-align: center; padding: 10px; }
+
+    @media(max-width:700px){
+      .radio-device { width: min(92vw, 340px) !important; min-height: 610px !important; padding: 10px !important; }
+      .radio-display-frame { min-height: 170px !important; }
+      .radio-codes-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+
+    /* BLACK RIDGE classified identity / attendance layer */
+    .classified-shell {
+      position: relative;
+      background:
+        linear-gradient(180deg,rgba(8,11,17,.98),rgba(3,5,8,.98)),
+        repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 4px);
+      border: 1px solid #384152;
+      border-right: 3px solid var(--primary-gold);
+      border-radius: 10px;
+      padding: 14px;
+      overflow: hidden;
+      box-shadow: inset 0 0 35px rgba(0,0,0,.55), 0 12px 30px rgba(0,0,0,.28);
+    }
+    .classified-shell:before {
+      content: "BLACK RIDGE // CLASSIFIED";
+      position: absolute; top: 9px; left: 12px;
+      font: 700 .55rem/1 monospace; letter-spacing: 2px;
+      color: rgba(245,158,11,.42); transform: rotate(-4deg);
+      pointer-events: none;
+    }
+    .classified-stamp {
+      display: inline-flex; align-items: center; gap: 7px;
+      border: 1px solid #596474; background: #070a0e;
+      color: var(--red-alert); padding: 5px 8px; border-radius: 4px;
+      font: 700 .6rem monospace; letter-spacing: 1px;
+      box-shadow: inset 0 0 12px rgba(239,68,68,.08);
+    }
+    .classified-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+    .classified-stat { background: #05070a; border: 1px solid #2d3748; border-radius: 6px; padding: 10px; text-align: center; }
+    .classified-stat small { display: block; color: var(--text-dim); font-size: .62rem; margin-bottom: 4px; }
+    .classified-stat strong { display: block; color: var(--cyan-glow); font: 700 1.15rem monospace; }
+    .identity-card { background: #080b10; border: 1px solid #2d3748; border-right: 2px solid var(--cyan-glow); border-radius: 7px; padding: 11px; margin-top: 9px; }
+    .identity-card .identity-code { font: 700 1rem monospace; color: var(--cyan-glow); }
+    .identity-meta { font-size: .68rem; color: var(--text-dim); line-height: 1.7; }
+    .identity-private { border-right-color: var(--purple-vip); }
+    .identity-modal-card { max-width: 470px; border-color: #596474; background: linear-gradient(145deg,#0c1118,#030507); }
+    .identity-required-banner { border: 1px solid var(--red-alert); background: rgba(127,29,29,.12); color: #fca5a5; padding: 9px; border-radius: 6px; font-size: .72rem; line-height: 1.6; margin-bottom: 9px; }
+    .secret-note { font-size: .64rem; color: #7f8a9a; line-height: 1.6; margin-top: 6px; }
+    .presence-online { color: var(--green-status); font-weight: 700; }
+    .presence-offline { color: var(--red-alert); font-weight: 700; }
+    .security-line { height: 1px; background: linear-gradient(90deg,transparent,#394455,transparent); margin: 12px 0; }
+    .classified-title { color: var(--primary-gold); font-weight: 800; font-size: .88rem; letter-spacing: .3px; }
+    @media(max-width:650px){ .classified-grid { grid-template-columns: 1fr 1fr; } .classified-grid .classified-stat:last-child { grid-column: 1/-1; } }
+
+    .audit-log-item { background:#070a0e; border:1px solid #273142; border-right:3px solid var(--primary-gold); border-radius:7px; padding:10px 12px; margin-top:7px; }
+    .audit-log-item .audit-log-title { color:var(--primary-gold); font-weight:800; font-size:.76rem; }
+    .audit-log-item .audit-log-meta { color:var(--text-dim); font-size:.62rem; margin-top:4px; line-height:1.6; }
+    .audit-log-item .audit-log-details { color:var(--text-bright); font-size:.68rem; margin-top:5px; line-height:1.6; }
+  </style>
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+</head>
+<body>
+
+  <!-- S.O.S Alert Overlay -->
+  <div id="sos-screen-banner" aria-live="assertive" aria-modal="true" role="alertdialog">
+    <div class="sos-alert-scanline"></div>
+    <div class="sos-alert-card">
+      <div class="sos-alert-top">
+        <span class="sos-alert-brand">BLACK RIDGE // CIA</span>
+        <span class="sos-alert-channel"><i class="fa-solid fa-satellite-dish"></i> EMERGENCY CHANNEL</span>
+      </div>
+      <div class="sos-alert-divider"></div>
+      <div class="sos-alert-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="sos-alert-kicker">PRIORITY // IMMEDIATE RESPONSE</div>
+      <h1>نداء طوارئ ميداني</h1>
+      <div class="sos-alert-badge">S.O.S // LIVE</div>
+      <div id="sos-banner-content" class="sos-banner-content"></div>
+      <div class="sos-alert-actions">
+        <button type="button" onclick="dismissSOSBanner()"><i class="fa-solid fa-forward-step"></i> تخطي التنبيه</button>
+        <span id="sos-timer-tag">يختفي تلقائياً خلال 30 ثانية</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOS Input Modal -->
+  <div id="sos-input-modal" class="modal-overlay" style="display: none;">
+    <div class="auth-card" style="border-color: var(--red-alert);">
+      <i class="fa-solid fa-triangle-exclamation" style="font-size: 2rem; color: var(--red-alert); margin-bottom: 5px;"></i>
+      <h2 style="color: var(--red-alert);">إرسال إشعار طوارئ (S.O.S)</h2>
+      <p style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 10px;">حدد تفاصيل موقعك في لوس سانتوس والخطورة فوراً:</p>
+
+      <input type="text" id="sos-location-input" class="input-field" placeholder="الموقع / المنطقة (مثال: Vinewood / Sandy Shores)">
+      <input type="number" id="sos-count-input" class="input-field" placeholder="عدد الأفراد معك">
+      <input type="text" id="sos-note-input" class="input-field" placeholder="معلومات إضافية / ما تحتاجه الوحدة الآن (اختياري)">
+      <select id="sos-status-input" class="input-field">
+        <option value="اشتباك مسبق / إطلاق نار">اشتباك / إطلاق نار 🔴</option>
+        <option value="ملاحقة وتتبع تكتيكي">ملاحقة وتتبع 🟠</option>
+        <option value="طلب دعم واستطلاع عادي">دعم واستطلاع 🟡</option>
+      </select>
+
+      <button type="button" onclick="confirmAndSendSOS()" class="btn-action" style="background: var(--red-alert); color: #fff;">إرسال النداء الفوري</button>
+      <button type="button" onclick="closeSOSModal()" style="width: 100%; padding: 8px; background: transparent; color: var(--text-dim); border: none; cursor: pointer; margin-top: 5px;">إلغاء</button>
+    </div>
+  </div>
+
+  <!-- Entry Modal -->
+  <div id="passcode-modal" class="modal-overlay">
+    <div class="auth-card">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/2/25/Seal_of_the_Central_Intelligence_Agency.svg" alt="CIA Logo" class="cia-logo">
+      <h2>BLACK RIDGE CITY</h2>
+      <span class="city-tag">CENTRAL INTELLIGENCE AGENCY</span>
+      <p style="font-size: 0.75rem; color: var(--text-dim); margin: 10px 0 12px 0;">نظام الدعم والتتبع التكتيكي - GTA V ONLINE</p>
+      
+      <div class="classified-stamp"><i class="fa-solid fa-lock"></i> BLACK RIDGE // ACCESS GATE</div>
+      <div style="display:flex;gap:6px;margin:8px 0;"><button type="button" class="btn-action" style="margin:0;flex:1;" onclick="setLoginMode('agent')">Agent Login</button><button type="button" class="btn-action" style="margin:0;flex:1;background:#111827;color:var(--primary-gold);border:1px solid var(--primary-gold);" onclick="setLoginMode('chief')">CIA CHIEF Login</button></div>
+      <input type="hidden" id="login-mode" value="agent">
+      <input type="text" id="entry-name" class="input-field" placeholder="اسم الشخصية" autocomplete="name">
+      <input type="password" id="entry-passcode" class="input-field" placeholder="كود الدخول الشخصي" autocomplete="current-password">
+      <div id="chief-bootstrap-area" style="display:none;">
+        <input type="password" id="entry-registration-code" class="input-field" placeholder="رمز الدخول السري للقيادة" autocomplete="off">
+        <input type="password" id="entry-official-code" class="input-field" placeholder="رمز الحفظ السري للقيادة" autocomplete="off">
+        <input type="password" id="chief-personal-code" class="input-field" placeholder="كود الدخول الشخصي للقائد" autocomplete="new-password">
+        <input type="text" id="chief-public-code" class="input-field" placeholder="الكود العسكري/العام للقيادة" autocomplete="off">
+        <div class="secret-note">هذا هو كود دخول القائد اليومي. المعرف العام للقيادة يظهر للأعضاء بعد اعتماد الحساب.</div>
+      </div>
+      <p id="entry-help" style="font-size:0.68rem; color:var(--text-dim); line-height:1.6; margin:4px 0 8px;">
+        للأفراد: استخدم مسار اعتماد Agent من بوابة الدخول. بعد الاعتماد سيصل كود الدخول الخاص بك.
+        للقائد عند التأسيس الأول: أكمل خطوات التأسيس وأدخل رمز الحفظ السري عند ظهوره.
+      </p>
+      <button type="button" id="login-btn" class="btn-action">تسجيل الدخول</button>
+      <button type="button" id="characters-open-btn" style="width:100%;margin-top:7px;padding:8px;background:#080c12;color:var(--cyan-glow);border:1px solid var(--cyan-glow);border-radius:5px;font-weight:bold;cursor:pointer;">شخصياتي</button>
+      <button type="button" id="create-account-btn" style="width:100%;margin-top:7px;padding:8px;background:#080c12;color:var(--primary-gold);border:1px solid var(--primary-gold);border-radius:5px;font-weight:bold;cursor:pointer;">إنشاء حساب</button>
+      <p id="auth-msg" style="margin-top: 8px; font-size: 0.75rem; color: var(--red-alert);"></p>
+    </div>
+  </div>
+
+  <!-- Account Creation Modal -->
+  <div id="account-create-modal" class="modal-overlay" style="display:none;">
+    <div class="auth-card identity-modal-card" style="max-width:560px;">
+      <div class="classified-stamp"><i class="fa-solid fa-user-plus"></i> ACCOUNT // REGISTRATION</div>
+      <h2 style="margin-top:10px;">إنشاء حساب</h2>
+      <p style="font-size:.7rem;color:var(--text-dim);line-height:1.6;">أنشئ الحساب والشخصية الأولى، ثم أرسل طلب الاعتماد من بوابة الدخول. بعد موافقة القيادة يمنحك النظام كود الدخول والكود العسكري.</p>
+      <input type="text" id="account-login-name" class="input-field" placeholder="اسم تسجيل الدخول للحساب" autocomplete="username">
+      <input type="password" id="account-password" class="input-field" placeholder="كلمة مرور الحساب" autocomplete="new-password">
+      <input type="password" id="account-password-confirm" class="input-field" placeholder="تأكيد كلمة مرور الحساب" autocomplete="new-password">
+      <div class="classified-shell" style="margin:8px 0;padding:8px;">
+        <div style="color:var(--primary-gold);font-weight:bold;margin-bottom:5px;">الشخصية الأولى</div>
+        <input type="text" id="account-character-name" class="input-field" placeholder="اسم الشخصية الأولى" autocomplete="off">
+        <input type="hidden" id="account-character-code" value="0012">
+      </div>
+      <button type="button" id="account-create-submit" class="btn-action">إنشاء الحساب</button>
+      <p id="account-create-msg" style="margin-top:8px;color:var(--red-alert);font-size:.72rem;"></p>
+      <button type="button" id="account-create-close" style="width:100%;padding:8px;background:transparent;color:var(--text-dim);border:none;cursor:pointer;margin-top:5px;">إغلاق</button>
+    </div>
+  </div>
+
+  <!-- Mandatory Identity Modal -->
+  <div id="identity-modal" class="modal-overlay" style="display:none;">
+    <div class="auth-card identity-modal-card">
+      <div class="classified-stamp"><i class="fa-solid fa-fingerprint"></i> IDENTITY // REQUIRED</div>
+      <h2 style="margin-top:10px;">إنشاء الهوية الأمنية</h2>
+      <p class="identity-required-banner">
+        تم اعتماد حسابك. لا يمكن متابعة النظام قبل إكمال الهوية. سيتم حفظها على السيرفر لتبقى موجودة عند تسجيل الخروج والعودة.
+      </p>
+      <input type="text" id="identity-full-name" class="input-field" placeholder="الاسم الكامل">
+      <input type="date" id="identity-birth-date" class="input-field">
+      <input type="text" id="identity-nationality" class="input-field" placeholder="الجنسية">
+      <input type="text" id="identity-height" class="input-field" placeholder="الطول (اختياري)">
+      <select id="identity-blood-type" class="input-field">
+        <option value="">فصيلة الدم (اختياري)</option>
+        <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+        <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+      </select>
+      <input type="text" id="identity-occupation" class="input-field" placeholder="الوظيفة / التخصص (اختياري)">
+      <textarea id="identity-notes" class="input-field" placeholder="ملاحظات الهوية (اختياري)" style="height:75px;text-align:right;resize:none;"></textarea>
+      <button type="button" class="btn-action" onclick="saveMandatoryIdentity()">اعتماد الهوية ومتابعة الدخول</button>
+      <div class="secret-note">الهوية العامة تعرض الحد الأدنى فقط. التفاصيل الخاصة لا تُعرض للأعضاء العاديين.</div>
+      <p id="identity-msg" style="margin-top:8px;color:var(--red-alert);font-size:.72rem;"></p>
+    </div>
+  </div>
+
+  <!-- Characters Manager -->
+  <div id="characters-modal" class="modal-overlay" style="display:none;">
+    <div class="auth-card identity-modal-card" style="max-width:560px;">
+      <div class="classified-stamp"><i class="fa-solid fa-users-gear"></i> CHARACTERS // ACCESS</div>
+      <h2 style="margin-top:10px;">شخصياتي</h2>
+      <p style="font-size:.7rem;color:var(--text-dim);line-height:1.6;">«شخصياتي» مرتبطة بحسابك نفسه. ستظهر هنا كل الشخصيات المعتمدة التابعة للحساب، باستثناء أي شخصية تم فصلها. للدخول إلى أي شخصية اكتب كودها العسكري الذي منحه لك القائد.</p>
+      <div id="characters-auth-fields" style="display:none;"></div>
+      <div id="characters-manager-body" style="display:none;">
+        <div id="characters-owner-summary" class="classified-shell" style="margin:8px 0;"></div>
+        <div id="characters-list"></div>
+        <div id="characters-create-area" style="margin-top:10px;">
+          <input type="text" id="new-character-name" class="input-field" placeholder="اسم الشخصية الجديدة">
+          <button type="button" class="btn-action" onclick="requestNewCharacter()">إنشاء / طلب شخصية جديدة</button>
+        </div>
+        <div id="characters-manager-msg" style="margin-top:8px;color:var(--red-alert);font-size:.72rem;"></div>
+      </div>
+      <button type="button" onclick="closeCharactersManager()" style="width:100%;padding:8px;background:transparent;color:var(--text-dim);border:none;cursor:pointer;margin-top:5px;">إغلاق</button>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="mobile-header">
+    <div class="brand-title">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/2/25/Seal_of_the_Central_Intelligence_Agency.svg" class="cia-header-logo" alt="CIA Logo">
+      <div>BLACK RIDGE CIA</div>
+    </div>
+    
+    <button class="sos-btn" onclick="openSOSModal()"><i class="fa-solid fa-triangle-exclamation"></i> S.O.S</button>
+    
+    <div id="user-display-tag" style="font-size: 0.75rem; color: var(--cyan-glow);">#غير_مسجل</div>
+    <div class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></div>
+  </div>
+
+  <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div style="padding: 15px; border-bottom: 1px solid var(--border); text-align: center;">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/2/25/Seal_of_the_Central_Intelligence_Agency.svg" style="width: 40px; margin-bottom: 5px;" alt="CIA Logo">
+      <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.85rem;">LOS SANTOS - CIA</div>
+      <span style="font-size: 0.65rem; color: var(--text-dim);">GTA V ONLINE DIVISION</span>
+    </div>
+    <ul class="nav-list">
+      <li class="nav-btn active" onclick="showPane('dashboard', this)"><i class="fa-solid fa-chart-line"></i> لوحة السيطرة</li>
+      <li class="nav-btn" onclick="showPane('tactical-map-view', this)"><i class="fa-solid fa-map-location-dot"></i> خريطة لوس سانتوس (GTA V)</li>
+      <li class="nav-btn" onclick="showPane('cases-vault', this)"><i class="fa-solid fa-box-archive"></i> أرشيف القضايا والأدلة</li>
+      <li class="nav-btn" onclick="showPane('radio', this)"><i class="fa-solid fa-walkie-talkie"></i> الراديو وأكواد النداء</li>
+      <li class="nav-btn" onclick="showPane('chat', this)"><i class="fa-solid fa-comments"></i> الاتصالات المشفرة</li>
+      <li class="nav-btn" onclick="showPane('sos-alerts', this)"><i class="fa-solid fa-triangle-exclamation" style="color:var(--red-alert);"></i> بلاغات S.O.S</li>
+      <li id="operations-nav" class="nav-btn" style="display:none;" onclick="showPane('operations', this)"><i class="fa-solid fa-crosshairs"></i> المهمات الميدانية</li>
+      <li id="bank-nav" class="nav-btn" onclick="showPane('bank', this)"><i class="fa-solid fa-building-columns"></i> البنك والراتب</li>
+      <li class="nav-btn" onclick="showPane('reports', this)"><i class="fa-solid fa-file-contract"></i> التقارير والعمليات</li>
+      <li class="nav-btn" onclick="showPane('agents-directory', this)"><i class="fa-solid fa-user-secret"></i> دليل الأعضاء والحضور</li>
+      <li class="nav-btn" onclick="showPane('identity-directory', this)"><i class="fa-solid fa-id-card"></i> الهويات العامة</li>
+      <li class="nav-btn" onclick="openCharactersManager()"><i class="fa-solid fa-users-gear"></i> شخصياتي</li>
+      <li id="chief-nav" class="nav-btn" style="display: none;" onclick="showPane('chief-panel', this)"><i class="fa-solid fa-user-gear"></i> إدارة القيادة</li>
+      <li id="audit-nav" class="nav-btn" style="display: none;" onclick="showPane('audit-panel', this)"><i class="fa-solid fa-clock-rotate-left"></i> السجلات اليومية</li>
+    </ul>
+    <div style="padding: 15px; border-top: 1px solid var(--border);">
+      <button style="width: 100%; padding: 10px; background: var(--red-alert); color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;" onclick="logoutFromSystem()">تسجيل الخروج</button>
+    </div>
+  </div>
+
+  <!-- Content Area -->
+  <div class="content-area">
+    
+    <!-- Dashboard -->
+    <div id="dashboard" class="view-pane active">
+      <h3 style="margin-bottom: 10px; color: var(--primary-gold); font-size: 1rem;">حالة النظام - GTA V ONLINE</h3>
+
+      <div id="dashboard-alerts-card" class="dashboard-alerts-card" onclick="showPane('sos-alerts', null)" role="button" tabindex="0" onkeydown="if(event.key==='Enter') showPane('sos-alerts', null)">
+        <div class="dashboard-alerts-head">
+          <div>
+            <div class="dashboard-alerts-kicker">BLACK RIDGE // CONTROL CHANNEL</div>
+            <div class="dashboard-alerts-title"><i class="fa-solid fa-tower-broadcast"></i> البلاغات</div>
+          </div>
+          <div id="dashboard-alert-count" class="dashboard-alert-count">0</div>
+        </div>
+        <div id="dashboard-alert-preview" class="dashboard-alert-preview">لا توجد بلاغات S.O.S حالياً.</div>
+        <div class="dashboard-alerts-footer"><span>آخر البلاغات الميدانية</span><span>فتح سجل البلاغات ←</span></div>
+      </div>
+      <div id="leader-self-tools" class="card" style="display:none;border-color:var(--primary-gold);">
+        <strong style="color:var(--primary-gold);">أدوات القيادة الشخصية</strong>
+        <div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap;">
+          <button type="button" onclick="changeOwnLeaderData()" style="padding:7px 10px;background:#111827;color:#fff;border:1px solid var(--primary-gold);border-radius:4px;cursor:pointer;">تعديل بياناتي</button>
+          <button type="button" onclick="openChiefHandover()" style="padding:7px 10px;background:#111827;color:var(--red-alert);border:1px solid var(--red-alert);border-radius:4px;cursor:pointer;">تسليم القيادة</button>
+          <button type="button" onclick="editMyIdentity()" style="padding:7px 10px;background:#111827;color:#fff;border:1px solid var(--cyan-glow);border-radius:4px;cursor:pointer;">تعديل هويتي</button>
+        </div>
+      </div>
+      
+      <div class="card" style="border-color: var(--cyan-glow);">
+        <div style="font-size: 0.8rem; color: var(--cyan-glow); margin-bottom: 8px; font-weight: bold;"><i class="fa-solid fa-street-view"></i> حالتك الميدانية الحالية:</div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button class="status-btn status-patrol" onclick="setUserStatus('في دورية رسمية 🟢')">في دورية رسمية 🟢</button>
+          <button class="status-btn status-siad" onclick="setUserStatus('سيارة مدنية / تخفي 🟡')">سيارة مدنية / تخفي 🟡</button>
+          <button class="status-btn status-off" onclick="setUserStatus('خارج الخدمة 🔴')">خارج الخدمة 🔴</button>
+        </div>
+      </div>
+
+      <div class="classified-shell" style="margin-bottom:15px;">
+        <div class="classified-title"><i class="fa-solid fa-eye-slash"></i> سجل القطاع السري — LIVE PRESENCE</div>
+        <div class="classified-grid">
+          <div class="classified-stat"><small>إجمالي أفراد القطاع</small><strong id="stat-total-count">0</strong></div>
+          <div class="classified-stat"><small>متصلون الآن</small><strong id="stat-online-count">0</strong></div>
+          <div class="classified-stat"><small>غير متصلين</small><strong id="stat-offline-count">0</strong></div>
+        </div>
+        <div class="security-line"></div>
+        <div style="font-size:.67rem;color:var(--text-dim);line-height:1.6;">
+          السجل يعرض الأكواد فقط للعامة. وقت الدخول والخروج محفوظ على السيرفر ويتحدث مباشرة.
+          <span style="color:var(--primary-gold);">طلبات القبول: <strong id="stat-pending-count">0</strong></span>
+        </div>
+      </div>
+      
+      <div class="card" style="text-align: center; padding: 20px 10px;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/2/25/Seal_of_the_Central_Intelligence_Agency.svg" style="width: 65px; opacity: 0.8; margin-bottom: 8px;" alt="CIA Logo">
+        <h4 style="color: var(--primary-gold); font-size: 0.9rem;">BLACK RIDGE CITY - GTA V DIVISION</h4>
+        <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 4px;">خريطة لوس سانتوس والاتصالات المشفرة متاحة لجميع الوحدات الميدانية.</p>
+      </div>
+    </div>
+
+    <!-- GTA V Map View -->
+    <div id="tactical-map-view" class="view-pane">
+      <h3 style="margin-bottom: 5px; color: var(--primary-gold); font-size: 1rem;"><i class="fa-solid fa-map-location-dot"></i> خريطة لوس سانتوس التفاعلية (Los Santos GTA V)</h3>
+      <p style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 10px;">اضغط على أي موقع بالخريطة لتحديد موقعك أو إرسال الإحداثيات للعملاء.</p>
+      
+      <div class="card">
+        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+          <button onclick="clearMyMapLocation()" class="btn-action" style="margin:0; font-size: 0.8rem; flex:1; background: var(--border); color:#fff;"><i class="fa-solid fa-trash"></i> إزالة موقعي من الخريطة</button>
+        </div>
+        <div id="gta-map" style="height: 450px; width: 100%; border-radius: 8px; border: 2px solid var(--primary-gold); background: #0fa8d7;"></div>
+      </div>
+    </div>
+    
+    <!-- Cases Vault -->
+    <div id="cases-vault" class="view-pane">
+      <h3 style="margin-bottom: 10px; color: var(--primary-gold); font-size: 1rem;"><i class="fa-solid fa-box-archive"></i> أرشيف القضايا والأدلة (Cases Vault)</h3>
+      
+      <div class="card">
+        <h4 style="color:var(--cyan-glow); font-size: 0.85rem; margin-bottom: 8px;">توثيق قضية جديدة / دليل ميداني</h4>
+        <input type="text" id="case-title" class="input-field" placeholder="عنوان القضية / الملاحقة" style="text-align:right;">
+        <input type="text" id="case-siad-num" class="input-field" placeholder="رقم المركبة المدنية / أرقام السناد المشاركين" style="text-align:right;">
+        <textarea id="case-details" class="input-field" placeholder="تفاصيل القضية والأحداث والأدلة..." style="height:80px; text-align:right; resize:none;"></textarea>
+        <input type="text" id="case-media-url" class="input-field" placeholder="رابط صورة / مقطع فيديو للدليل (اختياري)" style="text-align:right;">
+        
+        <button onclick="saveCaseEntry()" class="btn-action" style="padding: 8px; font-size: 0.9rem;">حفظ القضية بالأرشيف</button>
+      </div>
+
+      <div class="card">
+        <h4 style="color:var(--primary-gold); font-size: 0.85rem; margin-bottom: 8px;">القضايا الموثقة بالأرشيف</h4>
+        <div id="cases-list-box" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      </div>
+    </div>
+
+    <!-- Radio -->
+    <div id="radio" class="view-pane">
+      <h3 style="margin-bottom:10px;color:var(--primary-gold);font-size:1rem;"><i class="fa-solid fa-tower-broadcast"></i> الراديو التكتيكي</h3>
+
+      <div class="radio-device">
+        <div class="radio-top-strip">
+          <span class="radio-brand">BLACK RIDGE // TACTICAL COMMS</span>
+          <span id="radio-power-indicator" class="radio-power-indicator off">OFFLINE</span>
+        </div>
+
+        <div class="radio-display-frame">
+          <div class="radio-display-header">
+            <span><i class="fa-solid fa-signal"></i> RADIO LINK</span>
+            <span id="radio-channel-short">CH-1</span>
+          </div>
+          <div id="radio-freq-display" class="radio-frequency">104.50</div>
+          <div id="radio-status-text" class="radio-status"><i class="fa-solid fa-power-off"></i> الراديو متوقف</div>
+          <div id="radio-activity" class="radio-activity">قم بتشغيل الراديو للبدء</div>
+        </div>
+
+        <div class="radio-controls">
+          <button type="button" id="radio-power-btn" class="radio-small-btn power-btn" onclick="toggleRadioPower()"><i class="fa-solid fa-power-off"></i><span>تشغيل الراديو</span></button>
+          <button type="button" class="radio-small-btn" onclick="adjustRadioVolume(-1)" title="خفض الصوت"><i class="fa-solid fa-volume-low"></i></button>
+          <button type="button" class="radio-small-btn" onclick="adjustRadioVolume(1)" title="رفع الصوت"><i class="fa-solid fa-volume-high"></i></button>
+          <button type="button" class="radio-small-btn" onclick="radioClearActivity()" title="مسح شاشة النشاط"><i class="fa-solid fa-eraser"></i></button>
+        </div>
+
+        <div id="radio-interactive" class="radio-interactive" style="display:none;">
+          <div class="radio-section-title"><i class="fa-solid fa-layer-group"></i> اختيار الموجة</div>
+          <div class="radio-channel-grid">
+            <button type="button" class="radio-channel-btn active" data-channel="CH-1" onclick="changeRadioChannel('CH-1','104.50','القناة العامة')"><strong>CH-1</strong><span>القناة العامة</span></button>
+            <button type="button" class="radio-channel-btn" data-channel="TAC-1" onclick="changeRadioChannel('TAC-1','108.20','قناة المطاردات')"><strong>TAC-1</strong><span>المطاردات</span></button>
+            <button type="button" class="radio-channel-btn" data-channel="CH-3" onclick="changeRadioChannel('CH-3','112.90','القيادة المشفرة')"><strong>CH-3</strong><span>القيادة المشفرة</span></button>
+          </div>
+
+          <div class="radio-section-title"><i class="fa-solid fa-bullhorn"></i> التحدث</div>
+          <div class="radio-talk-row">
+            <button type="button" class="ptt-btn" onmousedown="startPTT()" onmouseup="stopPTT()" onmouseleave="stopPTT()" ontouchstart="startPTT()" ontouchend="stopPTT()"><i class="fa-solid fa-microphone"></i><span>PTT</span></button>
+            <div class="radio-talk-hint"><strong>اضغط باستمرار</strong><br>للبث الصوتي التكتيكي<br><span id="radio-volume-label">الصوت: 70%</span></div>
+          </div>
+
+          <div class="radio-section-title"><i class="fa-solid fa-keyboard"></i> رسالة نصية عبر الراديو</div>
+          <div class="radio-text-row">
+            <input id="radio-text-input" type="text" maxlength="180" placeholder="اكتب رسالة قصيرة للموجة الحالية..." onkeydown="if(event.key==='Enter') sendRadioText()">
+            <button type="button" class="radio-send-btn" onclick="sendRadioText()"><i class="fa-solid fa-paper-plane"></i> إرسال</button>
+          </div>
+
+          <div class="radio-section-title"><i class="fa-solid fa-list-check"></i> 10-Codes</div>
+          <div class="radio-codes-grid">
+            <button type="button" class="radio-code-btn" onclick="sendRadioCode('10-4','مفهوم / موافقة')"><strong>10-4</strong><span>مفهوم / موافقة</span></button>
+            <button type="button" class="radio-code-btn" onclick="sendRadioCode('10-6','مشغول حالياً')"><strong>10-6</strong><span>مشغول حالياً</span></button>
+            <button type="button" class="radio-code-btn" onclick="sendRadioCode('10-7','خارج الخدمة')"><strong>10-7</strong><span>خارج الخدمة</span></button>
+            <button type="button" class="radio-code-btn" onclick="sendRadioCode('10-8','في الخدمة / متاح')"><strong>10-8</strong><span>في الخدمة / متاح</span></button>
+            <button type="button" class="radio-code-btn" onclick="sendRadioCode('10-20','تحديد الموقع الحالي')"><strong>10-20</strong><span>تحديد الموقع الحالي</span></button>
+            <button type="button" class="radio-code-btn" onclick="sendRadioCode('10-30','سلاح غير مصرح')"><strong>10-30</strong><span>سلاح غير مصرح</span></button>
+            <button type="button" class="radio-code-btn" onclick="sendRadioCode('10-32','طلب دعم أمني / تعزيزات')"><strong>10-32</strong><span>طلب دعم أمني / تعزيزات</span></button>
+            <button type="button" class="radio-code-btn" onclick="sendRadioCode('10-70','إطلاق نار قائم')"><strong>10-70</strong><span>إطلاق نار قائم</span></button>
+            <button type="button" class="radio-code-btn" onclick="sendRadioCode('10-80','مطاردة مركبة')"><strong>10-80</strong><span>مطاردة مركبة</span></button>
+            <button type="button" class="radio-code-btn" onclick="sendRadioCode('10-99','خطر شديد / إصابة عنصر')"><strong>10-99</strong><span>حالة خطر شديد / إصابة عنصر</span></button>
+          </div>
+
+          <div class="radio-live-log">
+            <div class="radio-section-title"><i class="fa-solid fa-tower-broadcast"></i> نشاط الموجة الحالية</div>
+            <div id="radio-live-log-list" class="radio-live-log-list"><div class="radio-empty">لا يوجد نشاط على هذه الموجة.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat View -->
+    <div id="chat" class="view-pane">
+      <h3 style="margin-bottom: 10px; color: var(--primary-gold); font-size: 1rem;">الاتصالات المشفرة</h3>
+      
+      <div class="card" style="padding: 10px;">
+        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+          <select id="chat-type-select" onchange="switchChatMode()" style="flex:1; padding: 6px; background: #000; color: #fff; border: 1px solid var(--border); border-radius: 4px; font-size: 0.8rem;">
+            <option value="global">الشات العام (الكل)</option>
+            <option value="private">محادثة خاصة / مشفرة</option>
+          </select>
+          <select id="private-user-select" style="display:none; flex:1; padding: 6px; background: #000; color: #fff; border: 1px solid var(--border); border-radius: 4px; font-size: 0.8rem;">
+            <option value="">اختر العضو...</option>
+          </select>
+        </div>
+
+        <div class="chat-box">
+          <div class="chat-messages" id="chat-messages-box"></div>
+          <div style="display:flex;gap:6px;border-top:1px solid var(--border);align-items:center;padding:4px;">
+            <input type="file" id="chat-image-file" accept="image/*" style="display:none;" onchange="handleChatImageUpload(this)">
+            <button type="button" onclick="document.getElementById('chat-image-file').click()" style="padding:7px 9px;background:#111827;color:var(--cyan-glow);border:1px solid var(--cyan-glow);border-radius:4px;cursor:pointer;" title="إرسال صورة">صورة</button>
+            <input type="text" id="chat-input" style="flex:1; background: transparent; border:none; padding:10px; color:#fff; outline:none; font-size: 0.85rem;" placeholder="اكتب رسالتك المشفرة...">
+            <button onclick="sendChatMessage()" style="padding: 0 15px; background: var(--primary-gold);border:none;font-weight:bold;cursor:pointer;">إرسال</button>
+          </div>
+          <div id="chat-image-preview" style="display:none;padding:5px;color:var(--text-dim);font-size:.68rem;"></div>
+        </div>
+      </div>
+
+      <div id="leadership-secure-chat-panel" class="card" style="display:none; margin-top:10px; border:1px solid var(--red-alert);">
+        <h4 style="color:var(--red-alert); font-size:.85rem; margin-bottom:7px;">سجل الرسائل المشفرة — CIA CHIEF / Senior Commander CIA</h4>
+        <p style="font-size:.68rem;color:var(--text-dim);margin-bottom:8px;">هذا السجل يظهر للقيادة فقط، وتبقى الرسائل محفوظة حتى بعد خروج أحد الطرفين.</p>
+        <div id="leadership-secure-chat-box" class="chat-box" style="max-height:320px;overflow:auto;"></div>
+      </div>
+    </div>
+
+    <!-- S.O.S Alerts Section -->
+    <div id="sos-alerts" class="view-pane">
+      <h3 style="margin-bottom:10px;color:var(--red-alert);font-size:1rem;"><i class="fa-solid fa-triangle-exclamation"></i> بلاغات الطوارئ S.O.S</h3>
+      <div class="card" style="border-color:rgba(239,68,68,.45);">
+        <div style="font-size:.72rem;color:var(--text-dim);margin-bottom:10px;">جميع البلاغات المحفوظة تظهر لكل العناصر. الحذف متاح فقط لـ CIA CHIEF و Senior Commander CIA.</div>
+        <div id="sos-alerts-list"></div>
+      </div>
+    </div>
+
+    <!-- Reports Section -->
+    <div id="reports" class="view-pane">
+      <h3 style="margin-bottom: 10px; color: var(--primary-gold); font-size: 1rem;"><i class="fa-solid fa-file-signature"></i> سجل التقارير والعمليات الميدانية</h3>
+      
+      <div class="card">
+        <h4 style="color:var(--cyan-glow); font-size: 0.85rem; margin-bottom: 8px;">إضافة تقرير جديد</h4>
+        <input type="text" id="report-title" class="input-field" placeholder="عنوان التقرير / موضوع العملية" style="text-align:right;">
+        <textarea id="report-body" class="input-field" placeholder="تفاصيل التقرير الاستخباراتي الميداني..." style="height:80px; text-align:right; resize:none;"></textarea>
+        
+        <input type="text" id="report-img-url" class="input-field" placeholder="رابط صورة الدليل / التقرير (اختياري)" style="text-align:right;">
+        <input type="file" id="report-img-file" accept="image/*" style="display:none;" onchange="handleImageUpload(this)">
+        <button onclick="document.getElementById('report-img-file').click()" style="width:100%; padding:6px; background:#111; border:1px dashed var(--cyan-glow); color:var(--cyan-glow); font-size:0.8rem; margin-bottom:8px; cursor:pointer;">📷 رفع صورة من الجهاز</button>
+
+        <div style="display:flex; align-items:center; gap:8px; margin: 5px 0 10px 0;">
+          <input type="checkbox" id="report-is-secret" style="cursor:pointer;">
+          <label for="report-is-secret" style="font-size:0.8rem; color:var(--red-alert); font-weight:bold; cursor:pointer;">🔒 تقرير سري للغاية (يظهر فقط للقائد CIA CHIEF)</label>
+        </div>
+
+        <button onclick="submitReport()" class="btn-action" style="padding: 8px; font-size: 0.9rem;">رفع التقرير للقيادة</button>
+      </div>
+
+      <div class="card">
+        <h4 style="color:var(--primary-gold); font-size: 0.85rem; margin-bottom: 8px;">التقارير المسجلة</h4>
+        <div id="reports-list-box" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      </div>
+    </div>
+
+    <!-- Directory View -->
+    <div id="agents-directory" class="view-pane">
+      <h3 style="margin-bottom: 5px; color: var(--primary-gold); font-size: 1rem;">دليل العملاء وحالة الحضور الميدانية</h3>
+      
+      <div class="table-container card">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>الكود الظاهر</th>
+              <th>الاسم (حسب الصلاحية)</th>
+              <th>الرتبة</th>
+              <th>حالة الخدمة</th>
+            </tr>
+          </thead>
+          <tbody id="public-agents-list"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Public Identity Directory -->
+    <div id="identity-directory" class="view-pane">
+      <div class="classified-shell">
+        <div class="classified-title"><i class="fa-solid fa-id-card"></i> سجل الهويات العامة</div>
+        <p style="font-size:.68rem;color:var(--text-dim);margin-top:7px;line-height:1.6;">
+          هذه النسخة العامة لا تعرض رموز الدخول ولا بيانات الهوية الحساسة. يظهر الكود والحالة ووجود الهوية فقط.
+        </p>
+        <div id="public-identity-list"></div>
+      </div>
+    </div>
+
+    <!-- Tactical Operations System -->
+    <div id="operations" class="view-pane">
+      <h3 style="margin-bottom:10px;color:var(--primary-gold);font-size:1rem;"><i class="fa-solid fa-crosshairs"></i> المهمات الميدانية — Tactical Operations</h3>
+      <div id="operation-command-box" class="card" style="display:none;border-color:var(--red-alert);">
+        <h4 style="color:var(--red-alert);">إنشاء مهمة ميدانية</h4>
+        <input id="op-title" class="input-field" placeholder="اسم المهمة">
+        <select id="op-type" class="input-field">
+  <option value="surveillance">مراقبة</option>
+  <option value="raid">مداهمة</option>
+  <option value="protection">حماية شخصية</option>
+  <option value="evidence">جمع أدلة</option>
+        </select>
+        <select id="op-risk" class="input-field">
+  <option value="LOW">منخفض</option>
+  <option value="MEDIUM">متوسط</option>
+  <option value="HIGH">مرتفع</option>
+  <option value="CRITICAL">حرج</option>
+        </select>
+        <textarea id="op-objective" class="input-field" placeholder="الهدف والتعليمات الميدانية" style="height:80px;resize:none;"></textarea>
+        <input id="op-leader-code" class="input-field" placeholder="كود قائد الكتيبة">
+        <input id="op-members-codes" class="input-field" placeholder="أكواد المشاركين مفصولة بفواصل">
+        <input id="op-count" type="number" min="1" max="40" class="input-field" placeholder="عدد أفراد الكتيبة">
+        <div style="display:flex;gap:5px;"><input id="op-start" class="input-field" placeholder="بداية العملية: x,y (اختياري)"><button type="button" onclick="pickOperationPoint('start')" style="min-width:105px;background:#111827;color:var(--cyan-glow);border:1px solid var(--cyan-glow);border-radius:5px;cursor:pointer;">من الخريطة</button></div>
+        <div style="display:flex;gap:5px;"><input id="op-end" class="input-field" placeholder="نهاية العملية: x,y (اختياري)"><button type="button" onclick="pickOperationPoint('end')" style="min-width:105px;background:#111827;color:var(--cyan-glow);border:1px solid var(--cyan-glow);border-radius:5px;cursor:pointer;">من الخريطة</button></div>
+        <textarea id="op-notes" class="input-field" placeholder="ملاحظات القيادة" style="height:65px;resize:none;"></textarea>
+        <button type="button" class="btn-action" onclick="createTacticalOperation()">إنشاء المهمة</button>
+      </div>
+      <div class="card"><h4 style="color:var(--primary-gold);">المهمات المسندة / المسجلة</h4><div id="operations-list"></div></div>
+    </div>
+
+    <!-- Bank -->
+<div id="bank" class="view-pane">
+  <h3 style="margin-bottom:10px;color:var(--primary-gold);font-size:1rem;">
+    <i class="fa-solid fa-building-columns"></i> البنك والراتب
+  </h3>
+
+  <div class="card">
+    <div id="bank-my-box"></div>
+
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+      <input
+        id="bank-account-input"
+        class="input-field"
+        placeholder="رقم الحساب البنكي"
+      >
+
+      <button
+        type="button"
+        class="btn-action"
+        onclick="saveBankAccount()"
+      >
+        حفظ الحساب البنكي
+      </button>
+
+      <input
+        id="bank-withdraw-amount"
+        class="input-field"
+        type="number"
+        min="1"
+        placeholder="مبلغ السحب"
+      >
+
+      <button
+        type="button"
+        class="btn-action"
+        onclick="withdrawBankMoney()"
+      >
+        سحب
+      </button>
+    </div>
+  </div>
+
+  <div
+    id="bank-command-box"
+    class="card"
+    style="display:none;border-color:var(--primary-gold);"
+  >
+    <h4 style="color:var(--primary-gold);">
+      إدارة الرواتب والأرصدة
+    </h4>
+
+    <div id="bank-command-content"></div>
+
+    <div
+      id="bank-management-controls"
+      style="display:none;margin-top:10px;"
+    >
+      <input
+        id="bank-target-code"
+        class="input-field"
+        placeholder="كود الشخص"
+      >
+
+      <input
+        id="bank-deduction-amount"
+        class="input-field"
+        type="number"
+        min="1"
+        placeholder="مبلغ الخصم"
+      >
+
+      <button
+        type="button"
+        class="btn-action"
+        onclick="manageBank('freeze')"
+      >
+        تجميد الحساب
+      </button>
+
+      <button
+        type="button"
+        class="btn-action"
+        onclick="manageBank('unfreeze')"
+      >
+        فك تجميد الحساب
+      </button>
+
+      <button type="button" class="btn-action" onclick="manageBank('stop-account')">إيقاف الحساب</button>
+      <button type="button" class="btn-action" onclick="manageBank('start-account')">تفعيل الحساب</button>
+      <button type="button" class="btn-action" onclick="manageBank('withdraw')">سحب من حساب الشخص</button>
+      <button type="button" class="btn-action" onclick="manageBank('deduct')">خصم من الرصيد</button>
+      <button type="button" class="btn-action" onclick="paySalaryToTarget()">صرف الراتب الآن</button>
+    </div>
+  </div>
+</div>
+    
+
+
+    <!-- Chief Panel -->
+    <div id="chief-panel" class="view-pane">
+      <div id="chief-command-secrets" class="classified-shell">
+        <div class="classified-title"><i class="fa-solid fa-user-shield"></i> BLACK RIDGE // CHIEF COMMAND</div>
+        <div class="security-line"></div>
+        <h4 style="color:var(--primary-gold);font-size:.88rem;margin-bottom:7px;"><i class="fa-solid fa-key"></i> هوية دخول القيادة</h4>
+        <p style="font-size:.72rem;color:var(--text-dim);margin-bottom:5px;">كود الدخول الشخصي الحالي: <strong id="chief-current-secret" style="color:var(--cyan-glow);">••••</strong></p>
+        <p style="font-size:.72rem;color:var(--text-dim);margin-bottom:10px;">رمز الحفظ الرسمي للتأسيس فقط: <strong id="chief-official-code" style="color:var(--primary-gold);">••••</strong></p>
+        <button type="button" onclick="changeOwnSecretCode()" style="padding:8px 12px;background:var(--primary-gold);color:#000;border:0;border-radius:5px;font-weight:bold;cursor:pointer;">تغيير كود دخولي</button>
+        <button type="button" onclick="changeOwnPublicCode()" style="padding:8px 12px;margin-right:6px;background:#111827;color:var(--primary-gold);border:1px solid var(--primary-gold);border-radius:5px;font-weight:bold;cursor:pointer;">تغيير كودي العسكري</button>
+        <button type="button" onclick="changeOwnHobbies()" style="padding:8px 12px;margin-right:6px;background:#111827;color:#fff;border:1px solid var(--cyan-glow);border-radius:5px;font-weight:bold;cursor:pointer;">تعديل بياناتي الإضافية</button>
+        <p class="secret-note">رمز الحفظ الرسمي مخصص للتأسيس فقط ولا يظهر في الدخول اليومي. كود الدخول هو الكود الشخصي الذي اختاره القائد ويمكن تغييره من هنا.</p>
+      </div>
+
+      <div id="chief-only-admissions" class="card">
+        <h4 style="color:var(--primary-gold);font-size:.85rem;margin-bottom:8px;">طلبات القبول</h4>
+        <div class="table-container">
+          <table class="table-custom">
+            <thead><tr><th>الاسم المطلوب</th><th>الكود الظاهر</th><th>الإجراء</th></tr></thead>
+            <tbody id="pending-queue-list"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="chief-only-characters" class="card">
+        <h4 style="color:var(--primary-gold);font-size:.85rem;margin-bottom:8px;">طلبات شخصيات الأعضاء</h4>
+        <div class="table-container">
+          <table class="table-custom">
+            <thead><tr><th>صاحب الحساب</th><th>الشخصية المطلوبة</th><th>الإجراء</th></tr></thead>
+            <tbody id="character-request-queue-list"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4 style="color:var(--cyan-glow);font-size:.85rem;margin-bottom:8px;">إدارة الأعضاء</h4>
+        <div class="table-container">
+          <table class="table-custom">
+            <thead>
+              <tr><th>الكود</th><th>الاسم</th><th>الرتبة</th><th>الحضور</th><th>الإجراء</th></tr>
+            </thead>
+            <tbody id="chief-members-list"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="border-color:var(--primary-gold);">
+        <h4 style="color:var(--primary-gold);font-size:.85rem;margin-bottom:6px;"><i class="fa-solid fa-ranking-star"></i> سلم الرتب المعتمد</h4>
+        <div style="font-size:.72rem;color:var(--text-dim);line-height:1.8;">
+          <strong style="color:var(--cyan-glow);">1 — Agent</strong><br>
+          <strong style="color:var(--purple-vip);">2 — High Commander</strong><br>
+          <strong style="color:#ef4444;">3 — Senior Commander CIA</strong>
+        </div>
+        <div style="margin-top:7px;font-size:.67rem;color:var(--text-dim);">القائد يستطيع ترقية وتنزيل الرتبة وفصل العضو. Senior Commander CIA يملك صلاحيات قيادية محدودة تشمل إدارة الرتب والفصل والوصول إلى الهويات السرية، دون صلاحيات القائد الحساسة.</div>
+      </div>
+
+      <div class="classified-shell">
+        <div class="classified-title"><i class="fa-solid fa-id-card"></i> الهويات العامة — إدارة القيادة</div>
+        <div id="chief-public-identity-list"></div>
+      </div>
+
+      <div class="classified-shell identity-private" style="margin-top:15px;">
+        <div class="classified-title"><i class="fa-solid fa-user-secret"></i> الهويات الخاصة للقيادات</div>
+        <p style="font-size:.67rem;color:var(--text-dim);margin-top:7px;line-height:1.6;">
+          السجل القيادي يعرض الأكواد فقط للقيادات العليا. أسماء الأشخاص لا تظهر هنا. تفاصيل الهوية الخاصة الكاملة متاحة لـ CIA CHIEF و Senior Commander CIA فقط.
+        </p>
+        <div id="private-leadership-identity-list"></div>
+      </div>
+    </div>
+
+    <!-- Daily Audit Logs — CIA CHIEF + Senior Commander CIA only -->
+    <div id="audit-panel" class="view-pane">
+      <div class="classified-shell">
+        <div class="classified-title"><i class="fa-solid fa-clock-rotate-left"></i> السجلات اليومية</div>
+        <p style="font-size:.68rem;color:var(--text-dim);margin-top:7px;line-height:1.6;">سجل قيادي سري يوضح الدخول والخروج والترقيات والتنزيلات والفصل واعتماد الأعضاء. يظهر فقط لـ CIA CHIEF و Senior Commander CIA.</p>
+        <div id="daily-audit-list" style="margin-top:10px;"></div>
+        <div class="security-line"></div>
+        <div class="classified-title" style="font-size:.78rem;">سجل المباشرة اليومية</div>
+        <div id="daily-attendance-summary" style="margin-top:10px;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentUser = null;
+    let activeChatMode = 'global';
+    let sosTimer = null;
+    let sosAlarmTimer = null;
+    let uploadedImageBase64 = "";
+    let chatImageBase64 = "";
+    let audioCtx = null;
+    let gtaMap = null;
+    let mapMarkers = {};
+    let hqMarkers = [];
+    let hqPlacementMode = null;
+
+    let radioPoweredOn = false;
+    let radioChannel = 'CH-1';
+    let radioVolume = 70;
+    let radioLiveLog = [];
+    let bootstrapMode = false;
+    let identityPendingUser = null;
+    let serverHasChief = null;
+    let auditLogs = [];
+    let attendanceLogs = [];
+    let operationsList = [];
+    let bankDirectory = [];
+    let loginMode = 'agent';
+
+    document.addEventListener("DOMContentLoaded", function() {
+      setTimeout(()=>setLoginMode('agent'),0);
+      const loginBtn = document.getElementById('login-btn');
+      if (loginBtn) loginBtn.addEventListener('click', function(e) { e.preventDefault(); handleLogin(); });
+      const charactersOpenBtn = document.getElementById('characters-open-btn');
+      if (charactersOpenBtn) charactersOpenBtn.addEventListener('click', function(e) { e.preventDefault(); openCharactersManager(); });
+      const createAccountBtn = document.getElementById('create-account-btn');
+      if (createAccountBtn) createAccountBtn.addEventListener('click', function(e) { e.preventDefault(); openAccountCreateModal(); });
+      const accountSubmit = document.getElementById('account-create-submit');
+      if (accountSubmit) accountSubmit.addEventListener('click', function(e) { e.preventDefault(); createAccountFromForm(); });
+      const accountClose = document.getElementById('account-create-close');
+      if (accountClose) accountClose.addEventListener('click', function(e) { e.preventDefault(); closeAccountCreateModal(); });
+      
+      const passcodeEl = document.getElementById('entry-passcode');
+      if (passcodeEl) {
+        passcodeEl.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleLogin(); });
+        passcodeEl.addEventListener('input', function() {
+          const code = this.value.trim();
+          const hasChief = registeredUsers.some(u => u.rank === 'CIA CHIEF');
+          if (!hasChief && code === '1531') showChiefBootstrap();
+          else if (!bootstrapMode) hideChiefBootstrap();
+        });
+      }
+
+      try {
+        const savedName = localStorage.getItem('cia_last_login_name');
+        const savedCode = localStorage.getItem('cia_last_login_code');
+        if (savedName) document.getElementById('entry-name').value = savedName;
+        if (savedCode) {
+          document.getElementById('entry-passcode').value = savedCode;
+          if (savedCode === '1531') showChiefBootstrap();
+        }
+      } catch(e) {}
+      updateRadioPowerUI();
+    });
+
+    const SHARED_STORAGE_KEYS = ['cia_users','cia_queue','cia_character_queue','cia_chats','cia_reports','cia_cases','cia_map_locations','cia_hq_locations'];
+    const ciaSocket = typeof io === 'function' ? io() : null;
+    let ciaSocketReady = false;
+
+    function getStoredData(key, defaultVal) {
+      try {
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : defaultVal;
+      } catch (e) { return defaultVal; }
+    }
+
+    function setStoredData(key, val) {
+      try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+      if (ciaSocket && SHARED_STORAGE_KEYS.includes(key)) {
+        ciaSocket.emit('shared:data:set', { key, value: val });
+      }
+    }
+
+    function applySharedData(key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
+      if (key === 'cia_users') {
+        registeredUsers = value || [];
+        serverHasChief = registeredUsers.some(u => u.rank === 'CIA CHIEF');
+        if (serverHasChief && bootstrapMode && !document.getElementById('entry-official-code').value) {
+          hideChiefBootstrap();
+        }
+        if (currentUser) {
+          const self = registeredUsers.find(u => u.id === currentUser.id);
+          if (self) currentUser = { ...currentUser, ...self };
+        }
+      }
+      if (key === 'cia_queue') { pendingQueue = value || []; if (currentUser && currentUser.rank === 'CIA CHIEF') renderChiefPanel(); }
+      if (key === 'cia_character_queue') { pendingCharacterQueue = value || []; if (currentUser && currentUser.rank === 'CIA CHIEF') renderChiefPanel(); }
+      if (key === 'cia_chats') chatMessages = value || { global: [] };
+      if (key === 'cia_reports') reportsList = value || [];
+      if (key === 'cia_cases') casesList = value || [];
+      if (key === 'cia_map_locations') { mapLocations = value || {}; if (gtaMap) renderAllMapMarkers(); }
+      if (key === 'cia_hq_locations') { if (gtaMap) renderHQMarkers(); }
+      if (typeof updateViews === 'function' && document.readyState !== 'loading') updateViews();
+    }
+
+    if (ciaSocket) {
+      ciaSocket.on('state:update', function(state) {
+        if (!state) return;
+        if (Array.isArray(state.cia_users)) {
+          registeredUsers = state.cia_users;
+          try { localStorage.setItem('cia_users', JSON.stringify(registeredUsers)); } catch(e) {}
+          serverHasChief = registeredUsers.some(u => u.rank === 'CIA CHIEF');
+          if (currentUser) {
+            const self = registeredUsers.find(u => u.id === currentUser.id);
+            if (self) currentUser = { ...currentUser, ...self };
+          }
+        }
+        if (Array.isArray(state.cia_queue)) pendingQueue = state.cia_queue;
+        if (Array.isArray(state.cia_character_queue)) pendingCharacterQueue = state.cia_character_queue;
+        if (state.cia_chats && typeof state.cia_chats === 'object') {
+          chatMessages = state.cia_chats;
+          try { localStorage.setItem('cia_chats', JSON.stringify(chatMessages)); } catch(e) {}
+        }
+        if (Array.isArray(state.cia_reports)) { reportsList = state.cia_reports; try { localStorage.setItem('cia_reports', JSON.stringify(reportsList)); } catch(e) {} renderReportsList(); }
+        if (Array.isArray(state.cia_sos)) {
+          sosAlerts = state.cia_sos;
+          renderSOSAlerts();
+        }
+        auditLogs = Array.isArray(state.cia_audit_logs) ? state.cia_audit_logs : [];
+        attendanceLogs = Array.isArray(state.cia_attendance) ? state.cia_attendance : [];
+        operationsList = Array.isArray(state.cia_operations) ? state.cia_operations : [];
+        if (currentUser && state.cia_users) { const me=state.cia_users.find(u=>u.id===currentUser.id); if(me){ currentUser={...currentUser,...me}; } }
+        if (typeof updateViews === 'function') updateViews();
+        if (document.getElementById('leadership-secure-chat-panel')) renderLeadershipSecureChats();
+        if (document.getElementById('characters-modal')?.style.display === 'flex' && currentUser) loadCharactersManager();
+      });
+
+      ciaSocket.on('admin:member:result', function(result) {
+        if (!result) return;
+        if (!result.ok) { alert(result.message || 'تعذر تنفيذ تعديل العضو.'); return; }
+        if (result.action === 'code') alert('تم تغيير كود الدخول بنجاح وحفظه في السيرفر.');
+        else if (result.action === 'rank') alert('تم حفظ تغيير الرتبة بنجاح.');
+        if (document.getElementById('characters-modal')?.style.display === 'flex') loadCharactersManager();
+      });
+
+      ciaSocket.on('chat:send:result', function(result) {
+        if (result && !result.ok) alert(result.message || 'تعذر إرسال الرسالة.');
+      });
+
+      ciaSocket.on('connect', function() {
+        ciaSocketReady = true;
+        const seed = {};
+        SHARED_STORAGE_KEYS.forEach(key => {
+          if (key === 'cia_users') return;
+          const raw = localStorage.getItem(key);
+          if (raw) { try { seed[key] = JSON.parse(raw); } catch(e) {} }
+        });
+        ciaSocket.emit('shared:data:seed', seed);
+      });
+      ciaSocket.on('character:list:result', function(result) {
+        if (!result || !result.ok) { document.getElementById('characters-manager-msg').innerText = (result && result.message) || 'تعذر تحميل الشخصيات.'; return; }
+        renderCharactersManager(result);
+      });
+
+      ciaSocket.on('character:request:result', function(result) {
+        const msg = document.getElementById('characters-manager-msg');
+        if (!result || !result.ok) { if (msg) msg.innerText = (result && result.message) || 'تعذر تنفيذ طلب الشخصية.'; return; }
+        if (result.direct) {
+          alert(`تم إنشاء الشخصية مباشرة.\nاسمها: ${result.user.name}\nكود الدخول: ${result.secretCode}\nاحفظ الكود ولا تشاركه.`);
+          document.getElementById('new-character-name').value = '';
+          loadCharactersManager();
+        } else if (msg) {
+          msg.innerText = 'تم إرسال طلب الشخصية إلى القائد. بعد الموافقة سيصل كود الدخول إلى صاحب الحساب.';
+        }
+      });
+
+      ciaSocket.on('character:approved', function(result) {
+        if (!result || !result.ok) return;
+        alert(`تمت الموافقة على شخصيتك الجديدة.\nالاسم: ${result.user.name}\nكود الدخول: ${result.secretCode}\nيجب إكمال الهوية عند أول دخول.`);
+        document.getElementById('new-character-name').value = '';
+        if (document.getElementById('characters-modal').style.display !== 'none') loadCharactersManager();
+      });
+
+      ciaSocket.on('character:request:new', function(req) {
+        if (currentUser && currentUser.rank === 'CIA CHIEF') {
+          playRadioBeep(800);
+          renderChiefPanel();
+        }
+      });
+
+      ciaSocket.on('character:admin:result', function(result) {
+        if (!result || !result.ok) { alert((result && result.message) || 'تعذر تنفيذ طلب الشخصية.'); return; }
+        if (result.action === 'approve') alert(`تم قبول الشخصية ${result.user.name}. كود الدخول: ${result.user.secretCode}`);
+        if (result.action === 'reject') alert('تم رفض طلب الشخصية.');
+        renderChiefPanel();
+      });
+
+      ciaSocket.on('bank:setAccount:result', function(result){ if(result && result.ok){ const b=result.self||{}; currentUser={...currentUser,bank:{...(currentUser.bank||{}),bankAccount:b.accountNumber||'',balance:b.balance??0,salary:b.salary??580,lastSalaryAt:b.lastSalaryAt||null,salaryClaimedToday:!!b.salaryClaimedToday,frozen:!!b.frozen,enabled:b.enabled!==false,salaryEnabled:b.salaryEnabled!==false,bankCode:b.bankCode||null}}; renderBank(); } else if(result) alert(result.message||'تعذر حفظ الحساب البنكي.'); });
+      ciaSocket.on('bank:setSalary:result', function(result){ if(result && !result.ok) return alert(result.message||'تعذر تعديل الراتب.'); if(result&&result.ok){ loadBankDirectory(); renderDailyAuditLogs(); } });
+      ciaSocket.on('bank:setRankSalary:result', function(result){ if(result&&result.ok){ loadBankDirectory(); renderDailyAuditLogs(); } });
+      ciaSocket.on('bank:setBalance:result', function(result){ if(result && !result.ok) return alert(result.message||'تعذر تعديل الرصيد.'); if(result&&result.ok){ loadBankDirectory(); renderDailyAuditLogs(); } });
+      ciaSocket.on('bank:manage:result', function(result){ if(result&&result.ok){ loadBankDirectory(); renderDailyAuditLogs(); } });
+      ciaSocket.on('bank:withdraw:result', function(result){ if(result && !result.ok) return alert(result.message||'تعذر السحب.'); if(result&&result.ok){ currentUser={...currentUser,bank:result.self}; renderBank(); } });
+      ciaSocket.on('bank:paySalary:result', function(result){ if(result&&result.ok){ loadBankDirectory(); renderDailyAuditLogs(); } });
+
+      ciaSocket.on('operation:create:result', function(result){ if(!result||!result.ok) return alert((result&&result.message)||'تعذر إنشاء المهمة.'); loadTacticalOperations(); });
+      ciaSocket.on('operation:list:result', function(result){ if(!result||!result.ok) return; operationsList=Array.isArray(result.operations)?result.operations:[]; renderTacticalOperations(); });
+      ciaSocket.on('operation:status:result', function(result){ if(!result||!result.ok) return alert((result&&result.message)||'تعذر تحديث حالة المهمة.'); loadTacticalOperations(); renderDailyAuditLogs(); });
+      ciaSocket.on('operation:note:result', function(result){ if(!result||!result.ok) return alert((result&&result.message)||'تعذر حفظ التحديث الميداني.'); loadTacticalOperations(); });
+      ciaSocket.on('operation:delete:result', function(result){ if(result&&result.ok){ loadTacticalOperations(); renderDailyAuditLogs(); } });
+
+      ciaSocket.on('operation:assigned', function(result){ const op=result&&result.operation?result.operation:result; playRadioBeep(1000); if(op) alert(`تم إسناد مهمة ميدانية ${op.missionNumber||op.id||''}.`); loadTacticalOperations(); });
+      ciaSocket.on('member:kicked', function(result){ alert((result&&result.message)||'تم فصل الشخصية.'); currentUser=null; location.reload(); });
+      ciaSocket.on('sos:deleted', function(){ renderSOSAlerts(); });
+
+      ciaSocket.on('leader:profile:result', function(result) {
+        if (!result || !result.ok) { alert((result && result.message) || 'تعذر تحديث البيانات.'); return; }
+        currentUser = result.user;
+        alert('تم حفظ بياناتك القيادية.');
+      });
+
+      ciaSocket.on('auth:chief:result', function(result) {
+        const msg = document.getElementById('auth-msg');
+        if (!result || !result.ok) {
+          if (msg) msg.innerText = (result && result.message) || 'تعذر اعتماد القائد.';
+          return;
+        }
+        hideChiefBootstrap();
+        alert('تم اعتماد CIA CHIEF. لن يتم الدخول تلقائياً؛ عد إلى بوابة CIA CHIEF وسجّل الدخول بالكود الشخصي.');
+      });
+
+      ciaSocket.on('auth:login:result', function(result) {
+        const msg = document.getElementById('auth-msg');
+        if (!result || !result.ok) {
+          if (msg) msg.innerText = (result && result.message) || "الاسم والكود غير متطابقين.";
+          return;
+        }
+        currentUser = result.user;
+        try {
+          localStorage.setItem('cia_last_login_name', currentUser.name || '');
+          localStorage.setItem('cia_last_login_code', currentUser.secretCode || '');
+        } catch(e) {}
+        completeLogin();
+        if (result.needsIdentity) openIdentityModal();
+      });
+
+      ciaSocket.on('join:request:result', function(result) {
+        const msg = document.getElementById('auth-msg');
+        if (result && result.ok) {
+          if (msg) msg.innerText = "تم إرسال طلبك إلى القائد بنجاح.";
+          alert("تم إرسال طلب القبول إلى القائد CIA CHIEF. بعد قبولك سيعطيك القائد كود الدخول الخاص بك.");
+        } else if (msg) {
+          msg.innerText = (result && result.message) || "تعذر إرسال الطلب.";
+        }
+      });
+
+      ciaSocket.on('admin:action:result', function(result) {
+        if (!result || !result.ok) { alert((result && result.message) || 'تعذر تنفيذ العملية.'); return; }
+        if (result.action === 'approve') {
+          alert(`تم قبول ${result.user.name}!\nكود الدخول الخاص بالعضو: ${result.user.secretCode}\nاحفظ هذا الكود ولا تشاركه.`);
+        } else if (result.action === 'reject') {
+          alert('تم رفض طلب الانضمام.');
+        }
+      });
+
+      ciaSocket.on('admin:member:result', function(result) {
+        if (!result || !result.ok) { alert((result && (result.error || result.message)) || 'تعذر تنفيذ العملية.'); return; }
+        if (result.action === 'kick') alert('تم فصل العضو وحفظ بياناته لإمكانية إعادته للخدمة.');
+        if (result.action === 'rank') alert('تم تحديث رتبة العضو بنجاح.');
+        if (result.action === 'code') alert('تم تغيير كود الدخول بنجاح.');
+        renderChiefPanel();
+        renderDailyAuditLogs();
+      });
+
+      ciaSocket.on('admin:chief-secret:result', function(result) {
+        if (!result || !result.ok) { alert((result && result.message) || 'تعذر تغيير رمز القائد.'); return; }
+        currentUser = result.user;
+        try { localStorage.setItem('cia_last_login_code', currentUser.secretCode || ''); } catch(e) {}
+        const secretEl = document.getElementById('chief-current-secret');
+        if (secretEl) secretEl.innerText = currentUser.secretCode;
+        alert('تم تغيير رمز دخول القائد وحفظه على السيرفر.');
+      });
+
+      ciaSocket.on('admin:chief-profile:result', function(result) {
+        if (!result || !result.ok) { alert((result && result.message) || 'تعذر تحديث ملف القائد.'); return; }
+        currentUser = result.user;
+        alert('تم حفظ بيانات القائد الإضافية على السيرفر.');
+      });
+
+      ciaSocket.on('member:approved', function(result) {
+        if (!result || !result.ok) return;
+        alert(`تم قبول طلبك.\nكود الدخول الخاص بك: ${result.secretCode}\nاحفظه، فهو كودك الشخصي للدخول لاحقاً.`);
+        alert('تم الاعتماد. تم حفظ قبول الشخصية، ولن يتم إدخالك تلقائياً. استخدم الكود الذي منحته القيادة عند تسجيل الدخول.');
+        try { localStorage.setItem('cia_last_member_code', result.secretCode); } catch(e) {}
+        currentUser = null;
+      });
+
+      ciaSocket.on('identity:result', function(result) {
+        const msg = document.getElementById('identity-msg');
+        if (!result || !result.ok) {
+          if (msg) msg.innerText = (result && result.message) || 'تعذر حفظ الهوية.';
+          return;
+        }
+        currentUser = result.user;
+        closeIdentityModal();
+        alert('تم اعتماد الهوية وحفظها. يمكنك الآن استخدام النظام.');
+        updateViews();
+      });
+
+      ciaSocket.on('join:request:new', function(req) {
+        if (currentUser && currentUser.rank === 'CIA CHIEF') {
+          playRadioBeep(700);
+          alert(`طلب دخول جديد من: ${req.name}`);
+          renderChiefPanel();
+        }
+      });
+
+      ciaSocket.on('shared:data:state', function(state) {
+        Object.keys(state || {}).forEach(key => applySharedData(key, state[key]));
+      });
+      ciaSocket.on('shared:data:update', function(payload) {
+        if (payload && SHARED_STORAGE_KEYS.includes(payload.key)) applySharedData(payload.key, payload.value);
+      });
+      ciaSocket.on('radio:state', function(data) {
+        if (!data || !radioPoweredOn || data.channel !== radioChannel) return;
+        const status = document.getElementById('radio-status-text');
+        if (status && data.statusHtml) status.innerHTML = data.statusHtml;
+        if (data.ptt && data.userCode !== (currentUser && currentUser.publicCode)) {
+          playRadioBeep(1200);
+          addRadioLog({channel:radioChannel,text:`'#'+data.userCode يتحدث على ${radioChannel}`,sender:data.userCode});
+          setRadioActivity(`'#'+data.userCode يبث الآن`, 5000);
+        }
+      });
+      ciaSocket.on('radio:channel', function(data) {
+        if (!data || data.channel !== radioChannel || data.userCode === (currentUser && currentUser.publicCode)) return;
+        addRadioLog({channel:radioChannel,text:`'#'+data.userCode دخل ${data.channel}`,sender:data.userCode});
+      });
+      ciaSocket.on('radio:code', function(data) {
+        if (!data || data.channel !== radioChannel || data.userCode === (currentUser && currentUser.publicCode)) return;
+        playRadioBeep(1050);
+        addRadioLog({channel:radioChannel,text:`'#'+data.userCode أرسل ${data.code} — ${data.meaning}`,sender:data.userCode});
+        setRadioActivity(`${data.code} من '#'+data.userCode`, 10000);
+      });
+      ciaSocket.on('radio:text', function(data) {
+        if (!data || data.channel !== radioChannel || data.userCode === (currentUser && currentUser.publicCode)) return;
+        playRadioBeep(800);
+        addRadioLog({channel:radioChannel,text:`'#'+data.userCode: ${data.text}`,sender:data.userCode});
+        setRadioActivity(`رسالة جديدة من '#'+data.userCode`, 30000);
+      });
+
+      ciaSocket.on('sos:alert', function(data) {
+        if (!data) return;
+        showRedScreenSOS(data);
+      });
+      ciaSocket.on('sos:deleted', function() { renderSOSAlerts(); });
+    }
+
+    let registeredUsers = getStoredData('cia_users', []);
+
+    // تنظيف الحساب القيادي المكرر/الملغى من النسخ القديمة
+    const cleanedRegisteredUsers = registeredUsers.filter(u => !(u.rank === 'CIA CHIEF' && (u.publicCode === 'CHIEF-02' || u.name === 'ذهول الأربعة' || u.secretCode === '1345')));
+    if (cleanedRegisteredUsers.length !== registeredUsers.length) setStoredData('cia_users', cleanedRegisteredUsers);
+    registeredUsers = cleanedRegisteredUsers;
+    let pendingQueue = getStoredData('cia_queue', []);
+    let pendingCharacterQueue = getStoredData('cia_character_queue', []);
+    let chatMessages = getStoredData('cia_chats', { global: [] });
+    let reportsList = getStoredData('cia_reports', []);
+    let casesList = getStoredData('cia_cases', []);
+    let mapLocations = getStoredData('cia_map_locations', {});
+    let sosAlerts = [];
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('overlay').classList.toggle('open');
+    }
+
+    function showChiefBootstrap() {
+      bootstrapMode = true;
+      const area = document.getElementById('chief-bootstrap-area');
+      if (area) area.style.display = 'block';
+      const official = document.getElementById('entry-official-code');
+      const help = document.getElementById('entry-help');
+      if (help) help.innerHTML = 'وضع تأسيس القيادة: أدخل بيانات القائد ثم رمز الحفظ السري في الخانة المخصصة. هذه الخانة لا تظهر في الدخول العادي.';
+      if (official && !official.value) {
+        official.focus();
+        document.getElementById('auth-msg').innerText = 'يرجى كتابة رمز الحفظ السري للقيادة.';
+      }
+    }
+
+    function hideChiefBootstrap() {
+      bootstrapMode = false;
+      const area = document.getElementById('chief-bootstrap-area');
+      if (area) area.style.display = 'none';
+      const official = document.getElementById('entry-official-code');
+      if (official) official.value = '';
+      const chiefPersonal = document.getElementById('chief-personal-code');
+      if (chiefPersonal) chiefPersonal.value = '';
+      const help = document.getElementById('entry-help');
+      if (help) help.innerHTML = 'للأفراد: استخدم مسار اعتماد Agent من بوابة الدخول. بعد الاعتماد سيصل كود الدخول الخاص بك. للقائد عند التأسيس الأول: أكمل خطوات التأسيس وأدخل رمز الحفظ السري عند ظهوره.';
+    }
+
+    let charactersOwner = null;
+    let charactersOwnerCredentials = null;
+    let charactersManagerList = [];
+
+    function openCharactersManager() {
+      const modal = document.getElementById('characters-modal');
+      if (!modal) return;
+      modal.style.display = 'flex';
+      const body = document.getElementById('characters-manager-body');
+      const auth = document.getElementById('characters-auth-fields');
+      const msg = document.getElementById('characters-manager-msg');
+      if (!currentUser) {
+        if (body) body.style.display = 'none';
+        if (auth) auth.style.display = 'none';
+        if (msg) msg.innerText = 'يجب تسجيل الدخول أولاً حتى تظهر شخصيات حسابك.';
+        return;
+      }
+      if (auth) auth.style.display = 'none';
+      if (msg) msg.innerText = 'جاري تحميل شخصيات حسابك...';
+      if (ciaSocket && ciaSocket.connected) {
+        ciaSocket.emit('character:list', {}, function(result) {
+          if (!result || !result.ok) {
+            if (msg) msg.innerText = (result && result.message) || 'تعذر تحميل الشخصيات.';
+            return;
+          }
+          renderCharactersManager(result);
+        });
+      }
+    }
+
+    function closeCharactersManager() {
+      const modal = document.getElementById('characters-modal');
+      if (modal) modal.style.display = 'none';
+      charactersOwner = null;
+      charactersOwnerCredentials = null;
+      const body = document.getElementById('characters-manager-body');
+      const auth = document.getElementById('characters-auth-fields');
+      if (body) body.style.display = 'none';
+      if (auth) auth.style.display = 'block';
+    }
+
+    function loadCharactersManager() {
+      if (!currentUser) {
+        const msg = document.getElementById('characters-manager-msg');
+        if (msg) msg.innerText = 'يجب تسجيل الدخول أولاً.';
+        return;
+      }
+      if (!ciaSocket || !ciaSocket.connected) { alert('الاتصال بالسيرفر غير متاح.'); return; }
+      ciaSocket.emit('character:list', {}, function(result) {
+        if (!result || !result.ok) {
+          const msg = document.getElementById('characters-manager-msg');
+          if (msg) msg.innerText = (result && result.message) || 'تعذر تحميل الشخصيات.';
+          return;
+        }
+        renderCharactersManager(result);
+      });
+    }
+
+    function renderCharactersManager(result) {
+      charactersOwner = result.owner;
+      charactersManagerList = result.characters || [];
+      const body = document.getElementById('characters-manager-body');
+      const auth = document.getElementById('characters-auth-fields');
+      if (auth) auth.style.display = 'none';
+      if (body) body.style.display = 'block';
+      const summary = document.getElementById('characters-owner-summary');
+      if (summary) summary.innerHTML = `<strong style="color:var(--primary-gold);">شخصيات الحساب</strong><br>عدد الشخصيات المعتمدة: ${result.characters.length} / ${result.limit}`;
+      const list = document.getElementById('characters-list');
+      if (list) {
+        list.innerHTML = result.characters.length ? `
+          <select id="characters-select" class="input-field" style="margin-top:7px;">${result.characters.map(c => `<option value="${esc(c.id)}">${esc(c.name)} — #${esc(c.publicCode)}</option>`).join('')}</select>
+          <input type="password" id="managed-character-code" class="input-field" placeholder="الكود العسكري للشخصية المختارة" style="margin-top:7px;" autocomplete="off">
+          <button type="button" class="btn-action" style="margin-top:7px;" onclick="loginSelectedCharacter()">دخول الشخصية المختارة</button>` : '<div class="identity-meta" style="padding:12px;text-align:center;">لا توجد شخصيات معتمدة لهذا الحساب.</div>';
+      }
+      const create = document.getElementById('characters-create-area');
+      if (create) create.style.display = result.characters.length >= result.limit ? 'none' : 'block';
+      const msg = document.getElementById('characters-manager-msg');
+      if (msg) msg.innerText = '';
+    }
+
+    function loginSelectedCharacter() {
+      const sel=document.getElementById('characters-select'); const codeEl=document.getElementById('managed-character-code');
+      const id=sel?.value, code=codeEl?.value.trim();
+      const character=charactersManagerList.find(c=>c.id===id);
+      if(!character||!code) return alert('اختر الشخصية واكتب كودها العسكري.');
+      closeCharactersManager();
+      ciaSocket.emit('character:login',{characterId:character.id,characterName:character.name,characterCode:code});
+    }
+
+    function loginManagedCharacter(characterId) {
+      const character = charactersManagerList.find(c => c.id === characterId);
+      const codeEl = document.getElementById('char-login-code-' + characterId);
+      const militaryCode = codeEl ? codeEl.value.trim() : '';
+      if (!character || !character.name) { alert('بيانات الشخصية غير متاحة.'); return; }
+      if (!militaryCode) { alert('اكتب الكود العسكري الذي منحه لك القائد لهذه الشخصية.'); return; }
+      if (!ciaSocket || !ciaSocket.connected) { alert('الاتصال بالسيرفر غير جاهز.'); return; }
+      closeCharactersManager();
+      ciaSocket.emit('character:login', { characterId: character.id, characterName: character.name, characterCode: militaryCode });
+    }
+
+    function requestNewCharacter() {
+      const requestedName = document.getElementById('new-character-name').value.trim();
+      if (!requestedName) { document.getElementById('characters-manager-msg').innerText = 'اكتب اسم الشخصية الجديدة.'; return; }
+      if (!currentUser) {
+        document.getElementById('characters-manager-msg').innerText = 'يجب تسجيل الدخول أولاً.';
+        return;
+      }
+      ciaSocket.emit('character:request', { requestedName }, function(result) {
+        if (!result || !result.ok) {
+          document.getElementById('characters-manager-msg').innerText = (result && result.message) || 'تعذر إرسال طلب الشخصية.';
+          return;
+        }
+        document.getElementById('new-character-name').value = '';
+        document.getElementById('characters-manager-msg').innerText = result.direct ? 'تم إنشاء الشخصية الجديدة.' : 'تم إرسال الطلب إلى القيادة.';
+        loadCharactersManager();
+      });
+    }
+
+    function editMyIdentity() {
+      if (!currentUser) return;
+      openIdentityModal();
+    }
+
+    function openAccountCreateModal() {
+      const modal = document.getElementById('account-create-modal');
+      if (modal) modal.style.display = 'flex';
+      const msg = document.getElementById('account-create-msg');
+      if (msg) msg.innerText = '';
+    }
+
+    function closeAccountCreateModal() {
+      const modal = document.getElementById('account-create-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function createAccountFromForm() {
+      const loginName = document.getElementById('account-login-name').value.trim();
+      const password = document.getElementById('account-password').value;
+      const confirm = document.getElementById('account-password-confirm').value;
+      const characterName = document.getElementById('account-character-name').value.trim();
+      const characterCode = document.getElementById('account-character-code').value.trim();
+      const msg = document.getElementById('account-create-msg');
+      if (!ciaSocket || !ciaSocket.connected) { msg.innerText = 'الاتصال بالسيرفر غير جاهز.'; return; }
+      if (!loginName || !password || !characterName || !characterCode) { msg.innerText = 'أكمل جميع البيانات.'; return; }
+      if (password !== confirm) { msg.innerText = 'كلمتا المرور غير متطابقتين.'; return; }
+      if (password.length < 4) { msg.innerText = 'كلمة المرور يجب أن تكون 4 أحرف على الأقل.'; return; }
+      ciaSocket.emit('account:create', { loginName, password, characterName, characterCode }, function(result) {
+        if (!result || !result.ok) { msg.innerText = (result && (result.error || result.message)) || 'تعذر إنشاء الحساب.'; return; }
+        msg.style.color = 'var(--primary-gold)';
+        msg.innerText = 'تم إنشاء الحساب والشخصية الأولى، وبانتظار اعتماد القيادة.';
+        try { localStorage.removeItem('cia_last_login_name'); localStorage.removeItem('cia_last_login_code'); localStorage.setItem('cia_account_login_name', loginName); } catch(e) {}
+        setTimeout(closeAccountCreateModal, 1400);
+      });
+    }
+
+    function handleLogin() {
+      const mode=document.getElementById('login-mode')?.value||loginMode;
+      const code=document.getElementById('entry-passcode').value.trim();
+      const name=document.getElementById('entry-name').value.trim();
+      const msg=document.getElementById('auth-msg'); msg.innerText='';
+      if(!ciaSocket||!ciaSocket.connected){msg.innerText='الاتصال بالسيرفر غير جاهز.';return;}
+      if(!name){msg.innerText='اكتب اسم الشخصية.';return;}
+      if(mode==='chief') {
+        const bootstrap=!serverHasChief; const reg=document.getElementById('entry-registration-code')?.value.trim()||''; const save=document.getElementById('entry-official-code')?.value.trim()||''; const personal=document.getElementById('chief-personal-code')?.value.trim()||code; const pub=document.getElementById('chief-public-code')?.value.trim()||'';
+        if(bootstrap){ if(!personal||!pub||!reg||!save){msg.innerText='أكمل بيانات تأسيس القيادة.';return;} ciaSocket.emit('auth:claimChief',{name,code:personal,publicCode:pub,registrationCode:reg,officialCode:save},r=>{if(!r||!r.ok)msg.innerText=(r&&r.message)||'تعذر اعتماد القيادة.';}); }
+        else { if(!personal){msg.innerText='اكتب كود الدخول الشخصي للقيادة.';return;} ciaSocket.emit('auth:login',{name,code:personal},r=>{if(!r||!r.ok)msg.innerText=(r&&r.message)||'تعذر تسجيل الدخول.';}); }
+        return;
+      }
+      if(code==='0012'){ ciaSocket.emit('join:request',{name},r=>{msg.innerText=r&&r.ok?'تم إرسال طلب الاعتماد إلى القيادة.':'محاولة غير مكتملة: '+((r&&r.message)||'تعذر إرسال الطلب.');}); return; }
+      ciaSocket.emit('auth:login',{name,code},r=>{ if(!r||!r.ok) msg.innerText=(r&&r.message)||'الاسم أو كود الدخول غير متطابقين.'; });
+    }
+
+    function openIdentityModal() {
+      const modal = document.getElementById('identity-modal');
+      if (!modal) return;
+      identityPendingUser = currentUser;
+      modal.style.display = 'flex';
+
+      const identity = (currentUser && currentUser.identity) || {};
+      document.getElementById('identity-full-name').value = identity.fullName || (currentUser ? currentUser.name : '');
+      document.getElementById('identity-birth-date').value = identity.birthDate || '';
+      document.getElementById('identity-nationality').value = identity.nationality || '';
+      document.getElementById('identity-height').value = identity.height || '';
+      document.getElementById('identity-blood-type').value = identity.bloodType || '';
+      document.getElementById('identity-occupation').value = identity.occupation || '';
+      document.getElementById('identity-notes').value = identity.notes || '';
+      document.getElementById('identity-msg').innerText = '';
+    }
+
+    function closeIdentityModal() {
+      const modal = document.getElementById('identity-modal');
+      if (modal) modal.style.display = 'none';
+      identityPendingUser = null;
+    }
+
+    function saveMandatoryIdentity() {
+      if (!currentUser || !ciaSocket || !ciaSocket.connected) {
+        document.getElementById('identity-msg').innerText = 'يجب أن يكون اتصال السيرفر فعالاً.';
+        return;
+      }
+
+      const identity = {
+        fullName: document.getElementById('identity-full-name').value.trim(),
+        birthDate: document.getElementById('identity-birth-date').value,
+        nationality: document.getElementById('identity-nationality').value.trim(),
+        height: document.getElementById('identity-height').value.trim(),
+        bloodType: document.getElementById('identity-blood-type').value,
+        occupation: document.getElementById('identity-occupation').value.trim(),
+        notes: document.getElementById('identity-notes').value.trim()
+      };
+
+      if (!identity.fullName || !identity.birthDate || !identity.nationality) {
+        document.getElementById('identity-msg').innerText = 'الاسم الكامل وتاريخ الميلاد والجنسية إلزامية.';
+        return;
+      }
+
+      ciaSocket.emit('member:saveIdentity', { identity });
+    }
+
+    function logoutFromSystem() {
+      if (!currentUser) {
+        location.reload();
+        return;
+      }
+      if (!ciaSocket || !ciaSocket.connected) {
+        location.reload();
+        return;
+      }
+      const done = () => {
+        currentUser = null;
+        location.reload();
+      };
+      ciaSocket.once('auth:logout:result', done);
+      ciaSocket.emit('logout');
+      setTimeout(done, 1500);
+    }
+
+    function completeLogin() {
+      document.getElementById('passcode-modal').style.display = 'none';
+      document.getElementById('user-display-tag').innerText = `#${currentUser.publicCode} (${currentUser.rank})`;
+
+      const leadershipNav = document.getElementById('chief-nav');
+      if (leadershipNav) leadershipNav.style.display = ['CIA CHIEF','SUPREME COMMANDER'].includes(normalizeRank(currentUser.rank)) ? 'flex' : 'none';
+      const opNav = document.getElementById('operations-nav');
+      if (opNav) opNav.style.display = ['CIA CHIEF','SUPREME COMMANDER','HIGH COMMANDER'].includes(normalizeRank(currentUser.rank)) ? 'flex' : 'none';
+      const chiefSecrets = document.getElementById('chief-command-secrets');
+      if (chiefSecrets) chiefSecrets.style.display = currentUser.rank === 'CIA CHIEF' ? 'block' : 'none';
+      const auditNav = document.getElementById('audit-nav');
+      if (auditNav) auditNav.style.display = (currentUser.rank === 'CIA CHIEF' || currentUser.rank === 'SUPREME COMMANDER') ? 'flex' : 'none';
+      const leaderTools = document.getElementById('leader-self-tools');
+      if (leaderTools) leaderTools.style.display = ['CIA CHIEF','SUPREME COMMANDER'].includes(normalizeRank(currentUser.rank)) ? 'block' : 'none';
+      
+      if (currentUser.radioChannel) radioChannel = currentUser.radioChannel;
+      renderBank();
+      renderTacticalOperations();
+      syncRadioChannelUI();
+      updateViews();
+    }
+
+    function setUserStatus(newStatus) {
+      if (!currentUser) return;
+      currentUser.status = newStatus;
+      let idx = registeredUsers.findIndex(u => u.publicCode === currentUser.publicCode);
+      if (idx !== -1) {
+        registeredUsers[idx].status = newStatus;
+        setStoredData('cia_users', registeredUsers);
+      }
+      updateViews();
+      alert(`تم تحديث حالتك الميدانية إلى: ${newStatus}`);
+    }
+
+    function setLoginMode(mode) {
+      loginMode = mode === 'chief' ? 'chief' : 'agent';
+      document.getElementById('login-mode').value = loginMode;
+      const area=document.getElementById('chief-bootstrap-area');
+      if(area) area.style.display = loginMode==='chief' ? 'block' : 'none';
+      const bootstrap = !serverHasChief;
+      ['entry-registration-code','entry-official-code','chief-public-code'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display = (loginMode==='chief' && bootstrap) ? 'block' : 'none'; });
+      const personal=document.getElementById('chief-personal-code'); if(personal) personal.style.display=loginMode==='chief'?'block':'none';
+      const code=document.getElementById('entry-passcode'); if(code) code.placeholder = loginMode==='chief' ? 'كود الدخول الشخصي للقيادة' : 'كود الدخول الشخصي';
+      const help=document.getElementById('entry-help'); if(help && loginMode==='chief') help.innerText='مسار سري للقيادة. أدخل بيانات القيادة في الحقول المخصصة عند إنشاء/اعتماد CIA CHIEF.';
+      if(help && loginMode==='agent') help.innerText='مسار Agent: أرسل طلب الاعتماد من خلال بوابة الدخول، ثم استخدم كود الدخول الذي تمنحه القيادة بعد الاعتماد.';
+    }
+
+    function parsePoint(value){ const m=String(value||'').split(',').map(Number); return m.length===2 && m.every(Number.isFinite)?{lat:m[0],lng:m[1],label:String(value||'').trim()}:null; }
+    let operationPointMode = null;
+    function pickOperationPoint(mode){ operationPointMode=mode; showPane('tactical-map-view', null); setTimeout(()=>alert('اضغط على الخريطة لتحديد '+(mode==='start'?'بداية':'نهاية')+' العملية.'),250); }
+
+    function loadTacticalOperations(){
+      if(!ciaSocket || !currentUser) return;
+      ciaSocket.emit('operation:list', {}, function(result){
+        if(!result || !result.ok) return alert((result&&result.message)||'تعذر تحميل المهمات.');
+        operationsList=Array.isArray(result.operations)?result.operations:[];
+        renderTacticalOperations();
+      });
+    }
+
+    function operationStatusCode(status){
+      const map={'مخططة':'PLANNED','PLANNED':'PLANNED','قيد التنفيذ':'IN_PROGRESS','IN_PROGRESS':'IN_PROGRESS','تمت':'COMPLETED','مكتملة':'COMPLETED','COMPLETED':'COMPLETED','فشلت':'FAILED','FAILED':'FAILED','ملغاة':'CANCELLED','CANCELLED':'CANCELLED'};
+      return map[status]||status;
+    }
+
+    function operationStatusLabel(status){
+      const map={PLANNED:'مخططة',IN_PROGRESS:'قيد التنفيذ',COMPLETED:'تمت',FAILED:'فشلت',CANCELLED:'ملغاة'};
+      return map[status]||status||'مخططة';
+    }
+
+    function createTacticalOperation(){
+      const rank=normalizeRank(currentUser?.rank);
+      if(!currentUser||!['CIA CHIEF','SUPREME COMMANDER','HIGH COMMANDER'].includes(rank)) return alert('إنشاء المهمات متاح للقيادة فقط.');
+      if(!ciaSocket||!ciaSocket.connected) return alert('الاتصال بالسيرفر غير متاح.');
+      const title=document.getElementById('op-title').value.trim();
+      const objective=document.getElementById('op-objective').value.trim();
+      if(!title||!objective) return alert('أكمل اسم المهمة والهدف.');
+      const payload={
+        title,
+        type:document.getElementById('op-type').value,
+        risk:document.getElementById('op-risk').value,
+        objective,
+        commanderCode:document.getElementById('op-leader-code').value.trim()||currentUser.publicCode,
+        memberCodes:document.getElementById('op-members-codes').value.split(',').map(v=>v.trim()).filter(Boolean),
+        startLocation:parsePoint(document.getElementById('op-start').value),
+        endLocation:parsePoint(document.getElementById('op-end').value)
+      };
+      ciaSocket.emit('operation:create',payload,function(result){
+        if(!result||!result.ok) return alert((result&&result.message)||'تعذر إنشاء المهمة.');
+        const note=document.getElementById('op-notes').value.trim();
+        const op=result.operation;
+        const finish=()=>{ document.querySelectorAll('#operation-command-box input,#operation-command-box textarea').forEach(el=>{el.value='';}); loadTacticalOperations(); };
+        if(note&&op?.id) ciaSocket.emit('operation:addNote',{operationId:op.id,text:note},()=>finish()); else finish();
+        alert('تم إنشاء المهمة بنجاح.');
+      });
+    }
+
+    function renderTacticalOperations(){
+      const list=document.getElementById('operations-list'); if(!list) return;
+      const rank=normalizeRank(currentUser?.rank);
+      const command=['CIA CHIEF','SUPREME COMMANDER','HIGH COMMANDER'].includes(rank);
+      const box=document.getElementById('operation-command-box'); if(box) box.style.display=command?'block':'none';
+      const rows=Array.isArray(operationsList)?operationsList:[];
+      if(!rows.length){list.innerHTML='<div class="identity-meta" style="padding:12px;text-align:center;">لا توجد مهمات متاحة حالياً.</div>';return;}
+      list.innerHTML=rows.map(op=>{
+        const status=operationStatusCode(op.status||'PLANNED');
+        const crew=Array.isArray(op.crew)?op.crew:[];
+        const notes=Array.isArray(op.notes)?op.notes:[];
+        const border=status==='FAILED'?'var(--red-alert)':status==='COMPLETED'?'var(--green-status)':'var(--border)';
+        return `<div class="card" style="margin-top:8px;border-color:${border};"><div style="display:flex;justify-content:space-between;gap:8px;"><strong style="color:var(--primary-gold);">${esc(op.missionNumber||op.id)} — ${esc(op.title||'مهمة')}</strong><span>${esc(operationStatusLabel(status))}</span></div><div style="font-size:.72rem;color:var(--text-dim);margin-top:4px;">${esc(op.type||'—')} • الخطر: ${esc(op.risk||'—')} • القائد: #${esc(op.commanderCode||op.battalionLeaderCode||'—')} • الأفراد: ${esc(crew.length||op.battalionCount||0)}</div><div style="font-size:.78rem;margin-top:5px;">${esc(op.objective||'')}</div>${crew.length?`<div style="font-size:.66rem;color:var(--cyan-glow);margin-top:5px;">الطاقم: ${crew.map(c=>`#${esc(c.code)}${c.name?` — ${esc(c.name)}`:''}`).join('، ')}</div>`:''}${notes.length?`<div style="margin-top:6px;border-top:1px solid var(--border);padding-top:5px;">${notes.slice(-5).map(n=>`<div style="font-size:.64rem;color:var(--text-dim);margin-top:3px;">#${esc(n.authorCode||'—')} — ${esc(n.text||'')}</div>`).join('')}</div>`:''}<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:7px;"><button class="btn-action" style="margin:0;padding:5px 8px;" onclick="addOperationUpdate('${esc(op.id)}')">تحديث ميداني</button><button class="btn-action" style="margin:0;padding:5px 8px;" onclick="setOperationStatus('${esc(op.id)}','IN_PROGRESS')">بدء التنفيذ</button><button class="btn-action" style="margin:0;padding:5px 8px;background:var(--green-status);color:#000;" onclick="setOperationStatus('${esc(op.id)}','COMPLETED')">تمت</button><button class="btn-action" style="margin:0;padding:5px 8px;background:var(--red-alert);" onclick="setOperationStatus('${esc(op.id)}','FAILED')">فشلت</button>${rank==='CIA CHIEF'?`<button class="btn-action" style="margin:0;padding:5px 8px;background:transparent;border:1px solid var(--red-alert);color:var(--red-alert);" onclick="deleteTacticalOperation('${esc(op.id)}')">حذف</button>`:''}</div></div>`;
+      }).join('');
+    }
+
+    function setOperationStatus(operationId,status){
+      if(!ciaSocket||!ciaSocket.connected) return alert('الاتصال بالسيرفر غير متاح.');
+      ciaSocket.emit('operation:updateStatus',{operationId,status:operationStatusCode(status)},function(result){
+        if(!result||!result.ok) return alert((result&&result.message)||'تعذر تحديث حالة المهمة.');
+        loadTacticalOperations();
+        renderDailyAuditLogs();
+      });
+    }
+
+    function addOperationUpdate(operationId){
+      const text=prompt('اكتب التحديث الميداني:'); if(!text||!text.trim()) return;
+      if(!ciaSocket||!ciaSocket.connected) return alert('الاتصال بالسيرفر غير متاح.');
+      ciaSocket.emit('operation:addNote',{operationId,text:text.trim()},function(result){
+        if(!result||!result.ok) return alert((result&&result.message)||'تعذر حفظ التحديث الميداني.');
+        loadTacticalOperations();
+      });
+    }
+
+    function deleteTacticalOperation(operationId){
+      if(!confirm('حذف المهمة نهائياً؟')) return;
+      if(!ciaSocket||!ciaSocket.connected) return alert('الاتصال بالسيرفر غير متاح.');
+      ciaSocket.emit('operation:delete',{operationId},function(result){
+        if(!result||!result.ok) return alert((result&&result.message)||'تعذر حذف المهمة.');
+        loadTacticalOperations();
+        renderDailyAuditLogs();
+        alert('تم حذف المهمة بنجاح.');
+      });
+    }
+
+    function withdrawBankMoney(){
+      const amount=Number(document.getElementById('bank-withdraw-amount')?.value);
+      if(!Number.isFinite(amount)||amount<=0) return alert('اكتب مبلغ سحب صحيح.');
+      if(!ciaSocket||!ciaSocket.connected) return alert('الاتصال بالسيرفر غير متاح.');
+      ciaSocket.emit('bank:withdraw',{amount},function(result){
+        if(!result||!result.ok) return alert((result&&result.message)||'تعذر السحب.');
+        const b=result.self||{};
+        currentUser={...currentUser,bank:{...(currentUser.bank||{}),bankAccount:b.accountNumber||currentUser.bank?.bankAccount||'',balance:b.balance??0,salary:b.salary??currentUser.bank?.salary??580,lastSalaryAt:b.lastSalaryAt||null,salaryClaimedToday:!!b.salaryClaimedToday,frozen:!!b.frozen,enabled:b.enabled!==false,salaryEnabled:b.salaryEnabled!==false,bankCode:b.bankCode||currentUser.bank?.bankCode||null}};
+        document.getElementById('bank-withdraw-amount').value='';
+        renderBank();
+        renderDailyAuditLogs();
+        alert(`تم سحب ${result.amount||amount} من حسابك.`);
+      });
+    }
+
+    function loadBankDirectory(){
+      if(!ciaSocket||!currentUser) return;
+      ciaSocket.emit('bank:get',{},function(result){
+        if(!result||!result.ok){bankDirectory=[];return;}
+        bankDirectory=Array.isArray(result.users)?result.users:[];
+        if(result.self){ currentUser={...currentUser,bank:{...(currentUser.bank||{}),bankAccount:result.self.accountNumber||'',balance:result.self.balance??0,salary:result.self.salary??580,lastSalaryAt:result.self.lastSalaryAt||null,salaryClaimedToday:!!result.self.salaryClaimedToday,frozen:!!result.self.frozen,enabled:result.self.enabled!==false,salaryEnabled:result.self.salaryEnabled!==false,bankCode:result.self.bankCode||null}}; }
+        renderBank();
+      });
+    }
+
+    function renderBank(){
+      const box=document.getElementById('bank-my-box'); if(!box||!currentUser) return;
+      const bank=currentUser.bank||{};
+      const rank=normalizeRank(currentUser.rank);
+      const canManage=['CIA CHIEF','SUPREME COMMANDER','HIGH COMMANDER'].includes(rank);
+      const status=bank.enabled===false?'موقوف':bank.frozen?'مجمد':'فعال';
+      const color=bank.enabled===false?'var(--red-alert)':bank.frozen?'var(--primary-gold)':'var(--green-status)';
+      box.innerHTML=`<div style="font-size:.82rem;color:var(--cyan-glow);">#${esc(currentUser.publicCode)} — ${esc(getRankLabel(currentUser.rank))}</div><div style="font-size:1.05rem;color:var(--primary-gold);font-weight:800;margin-top:5px;">الراتب: ${esc(bank.salary??580)}</div><div style="font-size:1.05rem;color:var(--text-bright);font-weight:800;margin-top:3px;">الرصيد: ${esc(bank.balance??0)}</div><div style="margin-top:7px;font-size:.72rem;color:${color};font-weight:800;">حالة الحساب: ${status}</div>`;
+      const cmd=document.getElementById('bank-command-box'); if(cmd) cmd.style.display=canManage?'block':'none';
+      const controls=document.getElementById('bank-management-controls'); if(controls) controls.style.display=canManage?'block':'none';
+      const content=document.getElementById('bank-command-content'); if(!content||!canManage)return;
+      const ranks=['AGENT','HIGH COMMANDER','SUPREME COMMANDER','CIA CHIEF'];
+      const options=ranks.map(r=>{const u=(bankDirectory||[]).find(x=>normalizeRank(x.rank)===r); const salary=u?.salary ?? (r===rank?bank.salary:580); const disabled=rank==='HIGH COMMANDER'&&r!=='AGENT' || rank==='SUPREME COMMANDER'&&!['AGENT','HIGH COMMANDER'].includes(r); return `<option value="${r}" ${disabled?'disabled':''}>${getRankLabel(r)} — ${esc(salary)}</option>`;}).join('');
+      const rows=(bankDirectory||[]).map(u=>`<div style="font-size:.69rem;padding:7px 0;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:7px;align-items:center;flex-wrap:wrap;"><span>#${esc(u.code)} — ${esc(u.name||'')} — ${esc(getRankLabel(u.rank))}<br><span style="color:${u.enabled===false?'var(--red-alert)':u.frozen?'var(--primary-gold)':'var(--green-status)'};">${u.enabled===false?'موقوف':u.frozen?'مجمد':'فعال'}</span> • الرصيد: ${esc(u.balance??0)} • الراتب: ${esc(u.salary??0)}</span><button type="button" class="btn-action" style="margin:0;padding:4px 7px;width:auto;" onclick="selectBankTarget('${esc(u.code)}')">اختيار</button></div>`).join('');
+      content.innerHTML=`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;"><select id="salary-rank" class="input-field" style="margin:0;min-width:190px;">${options}</select><input id="salary-amount" type="number" min="0" class="input-field" style="margin:0;max-width:160px;" placeholder="السعر / الراتب"><button type="button" class="btn-action" style="margin:0;" onclick="setSalaryByRank()">حفظ راتب الرتبة</button></div><div style="font-size:.65rem;color:var(--text-dim);margin-bottom:5px;">اختَر الشخص ثم استخدم أدوات الحساب بالأسفل.</div>${rows||'<div class="identity-meta" style="padding:8px;">لا توجد حسابات أخرى متاحة لصلاحيتك.</div>'}`;
+    }
+
+    function selectBankTarget(code){const input=document.getElementById('bank-target-code');if(input)input.value=code;}
+
+    function saveBankAccount() {
+  const value =
+    document.getElementById('bank-account-input').value.trim();
+
+  ciaSocket.emit(
+    'bank:setAccount',
+    {
+      accountNumber: value
+    },
+    (result) => {
+      if (!result || !result.ok) {
+        return alert(
+          (result && result.message) ||
+          'تعذر حفظ الحساب البنكي.'
+        );
+      }
+
+      alert('تم حفظ الحساب البنكي.');
+    }
+  );
+      }
+
+    function manageBank(action) {
+      const targetCode=document.getElementById('bank-target-code')?.value.trim();
+      const amount=Number(document.getElementById('bank-deduction-amount')?.value);
+      if(!targetCode) return alert('اكتب أو اختر كود الشخص.');
+      if(['deduct','withdraw'].includes(action) && (!Number.isFinite(amount)||amount<=0)) return alert('اكتب مبلغاً صحيحاً.');
+      if(!ciaSocket||!ciaSocket.connected) return alert('الاتصال بالسيرفر غير متاح.');
+      ciaSocket.emit('bank:manage',{action,targetCode,amount},function(result){
+        if(!result||!result.ok) return alert((result&&result.message)||'تعذر تنفيذ الإجراء البنكي.');
+        loadBankDirectory();
+        renderDailyAuditLogs();
+        alert('تم تنفيذ الإجراء البنكي وتسجيله في السجل اليومي.');
+      });
+    }
+
+    function paySalaryToTarget(){
+      const targetCode=document.getElementById('bank-target-code')?.value.trim();
+      if(!targetCode) return alert('اكتب أو اختر كود الشخص أولاً.');
+      if(!ciaSocket||!ciaSocket.connected) return alert('الاتصال بالسيرفر غير متاح.');
+      ciaSocket.emit('bank:paySalary',{targetCode},function(result){
+        if(!result||!result.ok) return alert((result&&result.message)||'تعذر صرف الراتب.');
+        loadBankDirectory();
+        renderDailyAuditLogs();
+        alert(`تم صرف ${result.amount||0} للشخصية #${targetCode}.`);
+      });
+    }
+
+    function setSalaryByRank(){
+      const rank=document.getElementById('salary-rank')?.value;
+      const amount=Number(document.getElementById('salary-amount')?.value);
+      if(!rank) return alert('اختر الرتبة.');
+      if(!Number.isFinite(amount)||amount<0) return alert('اكتب قيمة راتب صحيحة.');
+      if(!ciaSocket||!ciaSocket.connected) return alert('الاتصال بالسيرفر غير متاح.');
+      ciaSocket.emit('bank:setRankSalary',{rank,amount},function(result){
+        if(!result||!result.ok) return alert((result&&result.message)||'تعذر تعديل راتب الرتبة.');
+        loadBankDirectory();
+        renderDailyAuditLogs();
+        alert(`تم تعديل راتب ${result.label||rank} إلى ${amount}.`);
+      });
+    }
+    function setMemberBalance(memberId){
+      const value=prompt('الرصيد الجديد:');
+      if(value===null) return;
+      const amount=Number(value);
+      if(!Number.isFinite(amount)||amount<0) return alert('الرصيد غير صالح.');
+      if(!ciaSocket||!ciaSocket.connected) return alert('الاتصال بالسيرفر غير متاح.');
+      ciaSocket.emit('bank:setBalance',{memberId,amount},function(result){
+        if(!result||!result.ok) return alert((result&&result.message)||'تعذر تعديل الرصيد.');
+        loadBankDirectory();
+        renderDailyAuditLogs();
+      });
+    }
+
+
+    function esc(value) {
+      if (value === null || value === undefined) return '';
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function getRankBadge(rank) {
+      if (rank === 'CIA CHIEF') return 'rank-chief';
+      if (rank === 'SUPREME COMMANDER') return 'rank-supreme';
+      if (rank === 'High Commander') return 'rank-high';
+      return 'rank-agent';
+    }
+
+    function showPane(paneId, btn) {
+      document.querySelectorAll('.view-pane').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      const pane = document.getElementById(paneId);
+      if (pane) pane.classList.add('active');
+      if (btn) btn.classList.add('active');
+      if (document.getElementById('sidebar').classList.contains('open')) toggleSidebar();
+
+      if (paneId === 'tactical-map-view') setTimeout(initGTAMap, 250);
+      if (paneId === 'bank') setTimeout(loadBankDirectory, 50);
+      if (paneId === 'operations') setTimeout(loadTacticalOperations, 50);
+      updateViews();
+    }
+
+    /* Views Update Logic */
+    function updateViews() {
+      renderPresenceStats();
+      renderAgentsDirectory();
+      renderPublicIdentityDirectory();
+      renderChatMessages();
+      renderReportsList();
+      renderCasesList();
+      renderBank();
+      renderTacticalOperations();
+      if (currentUser && (currentUser.rank === 'CIA CHIEF' || currentUser.rank === 'SUPREME COMMANDER')) {
+        renderChiefPanel();
+        renderDailyAuditLogs();
+      }
+    }
+
+    function renderDailyAuditLogs() {
+      const box = document.getElementById('daily-audit-list');
+      if (!box) return;
+      if (!currentUser || !['CIA CHIEF','SUPREME COMMANDER'].includes(currentUser.rank)) { box.innerHTML = ''; return; }
+      const logs = (auditLogs || []).slice(0, 500);
+      if (!logs.length) { box.innerHTML = '<div class="identity-meta" style="text-align:center;padding:15px;">لا توجد سجلات يومية حتى الآن.</div>'; return; }
+      box.innerHTML = logs.map(log => {
+        const date = log.at ? new Date(log.at).toLocaleString('ar-JO', {dateStyle:'medium', timeStyle:'short'}) : 'غير محدد';
+        const actor = log.actorCode ? `#${esc(log.actorCode)} — ${esc(log.actorName || '')}` : 'SYSTEM';
+        const target = log.targetCode ? `#${esc(log.targetCode)} — ${esc(log.targetName || '')}` : '';
+        return `<div class="audit-log-item"><div class="audit-log-title">${esc(log.action || 'إجراء قيادي')}</div><div class="audit-log-meta">المنفذ: ${actor}${target ? `<br>المستهدف: ${target}` : ''}<br>${esc(date)}</div>${log.details ? `<div class="audit-log-details">${esc(log.details)}</div>` : ''}</div>`;
+      }).join('');
+      const attendance = document.getElementById('daily-attendance-summary');
+      if (attendance) {
+        const rows = (attendanceLogs || []).slice(0, 200);
+        attendance.innerHTML = rows.length ? rows.map(r => {
+          const start = r.startedAt ? new Date(r.startedAt).toLocaleString('ar-JO',{dateStyle:'medium',timeStyle:'short'}) : 'غير محدد';
+          const end = r.endedAt ? new Date(r.endedAt).toLocaleString('ar-JO',{dateStyle:'medium',timeStyle:'short'}) : 'مباشر الآن';
+          return `<div class="audit-log-item"><div class="audit-log-title">مباشرة ${esc(r.dayKey||'')}</div><div class="audit-log-meta">#${esc(r.userCode||'')} — ${esc(r.userName||'')}<br>البداية: ${esc(start)}<br>النهاية: ${esc(end)}<br>الراتب: ${r.salaryPaid ? 'تم الصرف' : 'مؤهل / لم يُصرف'}</div></div>`;
+        }).join('') : '<div class="identity-meta" style="text-align:center;padding:15px;">لا توجد سجلات مباشرة بعد.</div>';
+      }
+    }
+
+    function startDuty(){ if(!currentUser||!ciaSocket)return; ciaSocket.emit('duty:start',{},r=>{ if(!r||!r.ok)return alert((r&&r.message)||'تعذر تسجيل المباشرة.'); updateViews(); }); }
+    function endDuty(){ if(!currentUser||!ciaSocket)return; ciaSocket.emit('duty:end',{},r=>{ if(!r||!r.ok)return alert((r&&r.message)||'تعذر إنهاء المباشرة.'); updateViews(); }); }
+
+    function renderPresenceStats() {
+      const total = registeredUsers.length;
+      const online = registeredUsers.filter(u => u.online).length;
+      const offline = total - online;
+      
+      const elTotal = document.getElementById('stat-total-count');
+      const elOnline = document.getElementById('stat-online-count');
+      const elOffline = document.getElementById('stat-offline-count');
+      const elPending = document.getElementById('stat-pending-count');
+
+      if (elTotal) elTotal.innerText = total;
+      if (elOnline) elOnline.innerText = online;
+      if (elOffline) elOffline.innerText = offline;
+      if (elPending) elPending.innerText = pendingQueue.length + pendingCharacterQueue.length;
+    }
+
+    function renderAgentsDirectory() {
+      const list = document.getElementById('public-agents-list');
+      if (!list) return;
+      
+      list.innerHTML = registeredUsers.map(u => {
+        const rankClass = getRankBadge(u.rank);
+        const presenceClass = u.online ? 'presence-online' : 'presence-offline';
+        const presenceText = u.online ? 'متصل الآن' : 'غير متصل';
+        
+        return `
+          <tr>
+            <td style="font-weight:bold; color:var(--cyan-glow);">#${esc(u.publicCode)}</td>
+            <td>${esc(u.name || 'مشفر')}</td>
+            <td><span class="badge-rank ${rankClass}">${esc(getRankLabel(u.rank))}</span></td>
+            <td><span class="${presenceClass}">${presenceText}</span> <br><small style="color:var(--text-dim);">${esc(u.status || 'في الخدمة')}</small></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderPublicIdentityDirectory() {
+      const list = document.getElementById('public-identity-list');
+      if (!list) return;
+
+      list.innerHTML = registeredUsers.map(u => {
+        const hasId = u.identity && u.identity.fullName;
+        return `
+          <div class="identity-card">
+            <div class="identity-code">#${esc(u.publicCode)} — ${esc(u.rank)}</div>
+            <div class="identity-meta">
+              الحالة: ${u.online ? '<span class="presence-online">متصل</span>' : '<span class="presence-offline">غير متصل</span>'}<br>
+              سجل الهوية: ${hasId ? '<strong style="color:var(--green-status);">معتمدة ومسجلة 🔒</strong>' : '<strong style="color:var(--red-alert);">غير مكتملة ⚠️</strong>'}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /* Map System — copied from working index49 */
+    function initGTAMap() {
+      if (gtaMap) {
+        gtaMap.invalidateSize();
+        return;
+      }
+
+      const bounds = [[0, 0], [1000, 1000]];
+
+      gtaMap = L.map('gta-map', {
+        crs: L.CRS.Simple,
+        minZoom: -2,
+        maxZoom: 3,
+        zoomSnap: 0.5
+      });
+
+      L.imageOverlay(
+        'https://www.bragitoff.com/wp-content/uploads/2015/11/GTAV-HD-MAP-roadmap.jpg',
+        bounds
+      ).addTo(gtaMap);
+
+      gtaMap.fitBounds(bounds);
+
+      // زر إدارة المقرات: يظهر ويعمل فقط لـ CIA CHIEF
+      const HQControl = L.Control.extend({
+        options: { position: 'topright' },
+
+        onAdd: function(map) {
+          const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+          const button = L.DomUtil.create('button', '', container);
+
+          button.type = 'button';
+          button.innerHTML = 'إدارة المقرات';
+          button.title = 'إضافة المقر الرئيسي أو مقر احتياطي';
+          button.style.cssText = `
+            background:#05070a;
+            color:#f59e0b;
+            border:1px solid #f59e0b;
+            padding:7px 10px;
+            font-weight:bold;
+            cursor:pointer;
+            white-space:nowrap;
+          `;
+
+          L.DomEvent.disableClickPropagation(container);
+
+          button.onclick = function() {
+            if (!currentUser || currentUser.rank !== "CIA CHIEF") {
+              alert("هذه الصلاحية متاحة فقط لـ CIA CHIEF.");
+              return;
+            }
+
+            const choice = prompt(
+              "إدارة المقرات:\n\n1 = المقر الرئيسي\n2 = مقر احتياطي\n3 = حذف مقر\n\nاكتب رقم العملية:"
+            );
+
+            if (choice === "1") {
+              hqPlacementMode = "main";
+              alert("تم تفعيل وضع إضافة المقر الرئيسي. اضغط على موقعه في الخريطة.");
+            } else if (choice === "2") {
+              hqPlacementMode = "reserve";
+              alert("تم تفعيل وضع إضافة مقر احتياطي. اضغط على موقعه في الخريطة.");
+            } else if (choice === "3") {
+              deleteHQMarker();
+            } else {
+              hqPlacementMode = null;
+            }
+          };
+
+          return container;
+        }
+      });
+
+      if (currentUser && currentUser.rank === "CIA CHIEF") {
+        gtaMap.addControl(new HQControl());
+      }
+
+      // التعامل مع المقرات المحفوظة
+      renderHQMarkers();
+
+      // عند الضغط على الخريطة:
+      // CIA CHIEF يستطيع إضافة المقرات، وجميع الأعضاء يستطيعون تحديد مواقعهم.
+      gtaMap.on('click', function(e) {
+        if (!currentUser) return;
+
+        let y = Math.round(e.latlng.lat);
+        let x = Math.round(e.latlng.lng);
+
+        if (hqPlacementMode && currentUser.rank === "CIA CHIEF") {
+          let hqLocations = getStoredData('cia_hq_locations', []);
+
+          if (hqPlacementMode === "main") {
+            // يوجد مقر رئيسي واحد فقط
+            hqLocations = hqLocations.filter(loc => loc.type !== "main");
+          }
+
+          hqLocations.push({
+            type: hqPlacementMode,
+            x: x,
+            y: y
+          });
+
+          setStoredData('cia_hq_locations', hqLocations);
+          hqPlacementMode = null;
+          renderHQMarkers();
+
+          alert(
+            hqLocations[hqLocations.length - 1].type === "main"
+              ? "تم إضافة المقر الرئيسي بنجاح."
+              : "تم إضافة المقر الاحتياطي بنجاح."
+          );
+          return;
+        }
+
+        if(operationPointMode && ['CIA CHIEF','SUPREME COMMANDER','HIGH COMMANDER'].includes(normalizeRank(currentUser.rank))){
+          const targetInput=document.getElementById(operationPointMode==='start'?'op-start':'op-end');
+          if(targetInput) targetInput.value = `${x},${y}`;
+          const selected=operationPointMode; operationPointMode=null;
+          alert(`تم تحديد ${selected==='start'?'بداية':'نهاية'} العملية: ${x},${y}`);
+          showPane('operations', null);
+          return;
+        }
+
+        console.log("إحداثياتك الحالية - Y:", y, "X:", x);
+        setMyGTALocation(x, y);
+      });
+
+      renderAllMapMarkers();
+    }
+
+    function renderHQMarkers() {
+      if (!gtaMap) return;
+
+      hqMarkers.forEach(marker => {
+        if (marker) gtaMap.removeLayer(marker);
+      });
+      hqMarkers = [];
+
+      const hqLocations = getStoredData('cia_hq_locations', []);
+
+      let reserveNumber = 0;
+
+      hqLocations.forEach((loc, index) => {
+        const isMain = loc.type === "main";
+        if (!isMain) reserveNumber++;
+        const title = isMain ? "المقر الرئيسي (HQ)" : `مقر احتياطي #${reserveNumber}`;
+        const deleteButton = currentUser && currentUser.rank === "CIA CHIEF"
+          ? `<br><button onclick="deleteHQMarker(${index})" style="margin-top:8px;padding:6px 10px;background:#05070a;color:#ef4444;border:1px solid #ef4444;border-radius:4px;font-weight:bold;cursor:pointer;">إزالة المقر</button>`
+          : "";
+
+        const marker = L.marker([loc.y, loc.x])
+          .addTo(gtaMap)
+          .bindPopup(
+            `<b>${title}</b><br>الموقع: (${loc.x}, ${loc.y})${deleteButton}`
+          );
+
+        hqMarkers.push(marker);
+      });
+    }
+
+    function deleteHQMarker(index) {
+      if (!currentUser || currentUser.rank !== "CIA CHIEF") {
+        alert("إزالة المقرات متاحة فقط لـ CIA CHIEF.");
+        return;
+      }
+
+      const hqLocations = getStoredData('cia_hq_locations', []);
+      if (!hqLocations[index]) return;
+
+      const title = hqLocations[index].type === "main" ? "المقر الرئيسي" : "المقر الاحتياطي";
+      if (!confirm(`هل أنت متأكد من إزالة ${title}؟`)) return;
+
+      hqLocations.splice(index, 1);
+      setStoredData('cia_hq_locations', hqLocations);
+      renderHQMarkers();
+    }
+
+    function setMyGTALocation(x, y) {
+      mapLocations = getStoredData('cia_map_locations', {});
+      mapLocations[currentUser.publicCode] = { x: x, y: y, name: currentUser.publicCode, rank: currentUser.rank, radioChannel: radioChannel, radioOnline: radioPoweredOn };
+      setStoredData('cia_map_locations', mapLocations);
+      renderAllMapMarkers();
+      alert(`تم وضع موضعك التكتيكي على خريطة لوس سانتوس عند الإحداثيات: (${x}, ${y})!`);
+    }
+
+    function clearMyMapLocation() {
+      if (!currentUser) return;
+      mapLocations = getStoredData('cia_map_locations', {});
+      delete mapLocations[currentUser.publicCode];
+      setStoredData('cia_map_locations', mapLocations);
+      renderAllMapMarkers();
+      alert("تمت إزالة نقطتك من خريطة لوس سانتوس!");
+    }
+
+    function renderAllMapMarkers() {
+      if (!gtaMap) return;
+      
+      for (let code in mapMarkers) {
+        if (mapMarkers[code]) gtaMap.removeLayer(mapMarkers[code]);
+      }
+      mapMarkers = {};
+
+      mapLocations = getStoredData('cia_map_locations', {});
+      for (let code in mapLocations) {
+        let loc = mapLocations[code];
+        const radioUser = registeredUsers.find(u => u.publicCode === code);
+        const liveRadioChannel = radioUser && radioUser.radioOnline ? (radioUser.radioChannel || loc.radioChannel || 'غير محددة') : (loc.radioOnline ? (loc.radioChannel || 'غير محددة') : 'الراديو OFF');
+        let marker = L.marker([loc.y, loc.x]).addTo(gtaMap)
+          .bindPopup(`<b>العميل: #${loc.name}</b><br>الرتبة: ${loc.rank}<br>موقع لوس سانتوس: (${loc.x}, ${loc.y})<br>الموجة: <span style="color:var(--cyan-glow);">${liveRadioChannel}</span>`)
+          .openPopup();
+        mapMarkers[code] = marker;
+      }
+    }
+
+    /* Cases Vault System */
+    function saveCaseEntry() {
+      const title = document.getElementById('case-title').value.trim();
+      const siad = document.getElementById('case-siad-num').value.trim();
+      const details = document.getElementById('case-details').value.trim();
+      const media = document.getElementById('case-media-url').value.trim();
+
+      if (!title || !details) {
+        alert('يرجى ملء عنوان القضية والتفاصيل.');
+        return;
+      }
+
+      const newCase = {
+        id: Date.now(),
+        title,
+        siad,
+        details,
+        media,
+        author: currentUser ? currentUser.name : 'مجهول',
+        code: currentUser ? currentUser.publicCode : '00',
+        date: new Date().toLocaleString('ar-EG')
+      };
+
+      casesList.unshift(newCase);
+      setStoredData('cia_cases', casesList);
+
+      document.getElementById('case-title').value = '';
+      document.getElementById('case-siad-num').value = '';
+      document.getElementById('case-details').value = '';
+      document.getElementById('case-media-url').value = '';
+
+      renderCasesList();
+      renderBank();
+      renderTacticalOperations();
+      alert('تم حفظ القضية بالأرشيف بنجاح.');
+    }
+
+    function renderCasesList() {
+      const box = document.getElementById('cases-list-box');
+      if (!box) return;
+
+      if (casesList.length === 0) {
+        box.innerHTML = '<div style="color:var(--text-dim); font-size:0.8rem; text-align:center; padding:10px;">لا توجد قضايا مسجلة حتى الآن.</div>';
+        return;
+      }
+
+      box.innerHTML = casesList.map(c => `
+        <div class="card" style="margin-bottom:8px; border-color:var(--border);">
+          <div style="display:flex; justify-content:space-between; color:var(--primary-gold); font-weight:bold; font-size:0.85rem;">
+            <span>${esc(c.title)}</span>
+            <span style="color:var(--text-dim); font-size:0.7rem;">${esc(c.date)}</span>
+          </div>
+          <div style="font-size:0.75rem; color:var(--cyan-glow); margin:3px 0;">المحقق: #${esc(c.code)} (${esc(c.author)}) | المركبة/السناد: ${esc(c.siad || 'غير محدد')}</div>
+          <p style="font-size:0.8rem; color:var(--text-bright); line-height:1.5; margin-top:5px; white-space:pre-wrap;">${esc(c.details)}</p>
+          ${c.media ? `<a href="${esc(c.media)}" target="_blank" style="display:inline-block; margin-top:5px; font-size:0.75rem; color:var(--cyan-glow); text-decoration:underline;">🔗 عرض الدليل المرفق</a>` : ''}
+        </div>
+      `).join('');
+    }
+
+    /* Radio Controls Logic */
+    function toggleRadioPower() {
+      radioPoweredOn = !radioPoweredOn;
+      updateRadioPowerUI();
+      if (radioPoweredOn && ciaSocket) {
+        ciaSocket.emit('radio:join', { channel: radioChannel, userCode: currentUser ? currentUser.publicCode : '00' });
+      }
+    }
+
+    function updateRadioPowerUI() {
+      const ind = document.getElementById('radio-power-indicator');
+      const btn = document.getElementById('radio-power-btn');
+      const status = document.getElementById('radio-status-text');
+      const inter = document.getElementById('radio-interactive');
+
+      if (radioPoweredOn) {
+        if (ind) { ind.classList.remove('off'); ind.classList.add('on'); ind.innerText = 'ONLINE'; }
+        if (btn) { btn.classList.remove('off-state'); btn.innerHTML = '<i class="fa-solid fa-power-off"></i><span>إيقاف الراديو</span>'; }
+        if (status) { status.classList.remove('off'); status.innerHTML = `<i class="fa-solid fa-signal"></i> متصل - ${radioChannel}`; }
+        if (inter) inter.style.display = 'block';
+        playRadioBeep(900);
+      } else {
+        if (ind) { ind.classList.remove('on'); ind.classList.add('off'); ind.innerText = 'OFFLINE'; }
+        if (btn) { btn.classList.add('off-state'); btn.innerHTML = '<i class="fa-solid fa-power-off"></i><span>تشغيل الراديو</span>'; }
+        if (status) { status.classList.add('off'); status.innerHTML = '<i class="fa-solid fa-power-off"></i> الراديو متوقف'; }
+        if (inter) inter.style.display = 'none';
+      }
+    }
+
+    function adjustRadioVolume(delta) {
+      radioVolume = Math.min(100, Math.max(0, radioVolume + (delta * 10)));
+      const lbl = document.getElementById('radio-volume-label');
+      if (lbl) lbl.innerText = `الصوت: ${radioVolume}%`;
+    }
+
+    function radioClearActivity() {
+      const act = document.getElementById('radio-activity');
+      if (act) act.innerText = 'جاهز للاستقبال...';
+    }
+
+    function changeRadioChannel(ch, freq, label) {
+      radioChannel = ch;
+      const freqDisplay = document.getElementById('radio-freq-display');
+      const chShort = document.getElementById('radio-channel-short');
+      if (freqDisplay) freqDisplay.innerText = freq;
+      if (chShort) chShort.innerText = ch;
+
+      document.querySelectorAll('.radio-channel-btn').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-channel') === ch);
+      });
+
+      if (radioPoweredOn && ciaSocket) {
+        ciaSocket.emit('radio:join', { channel: ch, userCode: currentUser ? currentUser.publicCode : '00' });
+      }
+      setRadioActivity(`تم التبديل إلى ${label} (${freq} MHz)`, 5000);
+    }
+
+    function syncRadioChannelUI() {
+      let freq = '104.50';
+      let label = 'القناة العامة';
+      if (radioChannel === 'TAC-1') { freq = '108.20'; label = 'قناة المطاردات'; }
+      if (radioChannel === 'CH-3') { freq = '112.90'; label = 'القيادة المشفرة'; }
+      changeRadioChannel(radioChannel, freq, label);
+    }
+
+    function startPTT() {
+      if (!radioPoweredOn) return;
+      playRadioBeep(1200);
+      setRadioActivity('جاري البث الصوتي...', 0);
+      if (ciaSocket) ciaSocket.emit('radio:ptt:start', { channel: radioChannel, userCode: currentUser ? currentUser.publicCode : '00' });
+    }
+
+    function stopPTT() {
+      if (!radioPoweredOn) return;
+      playRadioBeep(600);
+      setRadioActivity('انتهى البث.', 3000);
+      if (ciaSocket) ciaSocket.emit('radio:ptt:stop', { channel: radioChannel, userCode: currentUser ? currentUser.publicCode : '00' });
+    }
+
+    function sendRadioText() {
+      const input = document.getElementById('radio-text-input');
+      const txt = input.value.trim();
+      if (!txt || !radioPoweredOn) return;
+
+      const msgObj = {
+        channel: radioChannel,
+        text: txt,
+        userCode: currentUser ? currentUser.publicCode : '00'
+      };
+
+      if (ciaSocket) ciaSocket.emit('radio:text', msgObj);
+      addRadioLog({ channel: radioChannel, text: `أنت: ${txt}`, sender: 'أنت' });
+      input.value = '';
+    }
+
+    function sendRadioCode(code, meaning) {
+      if (!radioPoweredOn) return;
+      if (ciaSocket) {
+        ciaSocket.emit('radio:code', {
+          channel: radioChannel,
+          code,
+          meaning,
+          userCode: currentUser ? currentUser.publicCode : '00',
+          userName: currentUser ? currentUser.name : 'عنصر'
+        });
+      }
+      addRadioLog({ channel: radioChannel, text: `أنت أرسلت ${code} (${meaning})`, sender: 'أنت' });
+      setRadioActivity(`تم إرسال كود ${code}`, 5000);
+    }
+
+    function setRadioActivity(text, timeoutMs) {
+      const act = document.getElementById('radio-activity');
+      if (act) act.innerText = text;
+      if (timeoutMs > 0) {
+        setTimeout(() => {
+          if (act && act.innerText === text) act.innerText = 'جاهز للاستقبال...';
+        }, timeoutMs);
+      }
+    }
+
+    function addRadioLog(item) {
+      radioLiveLog.unshift(item);
+      if (radioLiveLog.length > 20) radioLiveLog.pop();
+      renderRadioLog();
+    }
+
+    function renderRadioLog() {
+      const list = document.getElementById('radio-live-log-list');
+      if (!list) return;
+
+      const channelLogs = radioLiveLog.filter(l => l.channel === radioChannel);
+      if (channelLogs.length === 0) {
+        list.innerHTML = '<div class="radio-empty">لا يوجد نشاط على هذه الموجة.</div>';
+        return;
+      }
+
+      list.innerHTML = channelLogs.map(l => `
+        <div class="radio-log-item">
+          <strong>${esc(l.sender)}:</strong> ${esc(l.text)}
+        </div>
+      `).join('');
+    }
+
+    function playRadioBeep(freq = 1000) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.value = (radioVolume / 100) * 0.1;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.08);
+      } catch(e) {}
+    }
+
+    /* Chat System Logic */
+    function switchChatMode() {
+      const sel = document.getElementById('chat-type-select');
+      const privSel = document.getElementById('private-user-select');
+      activeChatMode = sel.value;
+
+      if (activeChatMode === 'private') {
+        privSel.style.display = 'block';
+        populatePrivateUsersList();
+      } else {
+        privSel.style.display = 'none';
+      }
+      renderChatMessages();
+    }
+
+    function populatePrivateUsersList() {
+      const privSel = document.getElementById('private-user-select');
+      if (!privSel) return;
+
+      privSel.innerHTML = '<option value="">اختر العضو...</option>' + registeredUsers
+        .filter(u => !currentUser || u.publicCode !== currentUser.publicCode)
+        .map(u => `<option value="${esc(u.publicCode)}">#${esc(u.publicCode)} - ${esc(u.name)}</option>`)
+        .join('');
+    }
+
+    function chatConversationKey(a, b) {
+      return [String(a || '').trim(), String(b || '').trim()].sort().join('::');
+    }
+
+    function handleChatImageUpload(input) {
+      const preview = document.getElementById('chat-image-preview');
+      if (!input.files || !input.files[0]) return;
+      const file = input.files[0];
+      if (file.size > 6 * 1024 * 1024) { alert('حجم صورة الشات يجب ألا يتجاوز 6MB.'); input.value=''; return; }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        chatImageBase64 = e.target.result;
+        if (preview) { preview.style.display='block'; preview.innerText='تم تجهيز الصورة للإرسال.'; }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function deletePrivateChatMessage(messageId) {
+      if (!currentUser || !ciaSocket || !ciaSocket.connected) return;
+      ciaSocket.emit('chat:delete', { mode:'private', messageId, admin:false }, function(result) {
+        if (!result || !result.ok) alert((result && result.message) || 'تعذر حذف الرسالة من جهتك.');
+      });
+    }
+
+    function deletePrivateChatMessageAdmin(messageId) {
+      if (!currentUser || !['CIA CHIEF','SUPREME COMMANDER'].includes(normalizeRank(currentUser.rank))) return;
+      if (!confirm('حذف هذه الرسالة نهائياً من السجل القيادي؟')) return;
+      ciaSocket.emit('chat:delete', { mode:'private', messageId, admin:true }, function(result) {
+        if (!result || !result.ok) alert((result && result.message) || 'تعذر حذف الرسالة.');
+      });
+    }
+
+    function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input ? input.value.trim() : '';
+      if ((!text && !chatImageBase64) || !currentUser || !ciaSocket || !ciaSocket.connected) return;
+
+      const privSel = document.getElementById('private-user-select');
+      const targetUserCode = activeChatMode === 'private' && privSel ? privSel.value : null;
+
+      if (activeChatMode === 'private' && !targetUserCode) {
+        alert('اختر العضو الموجه له الرسالة الخاصة.');
+        return;
+      }
+
+      ciaSocket.emit('chat:send', {
+        mode: activeChatMode === 'private' ? 'private' : 'global',
+        targetCode: targetUserCode,
+        text,
+        image: chatImageBase64 || ''
+      }, function(result) {
+        if (!result || !result.ok) {
+          alert((result && result.message) || 'تعذر إرسال الرسالة.');
+          return;
+        }
+        input.value = '';
+        chatImageBase64 = '';
+        const imageInput = document.getElementById('chat-image-file');
+        const preview = document.getElementById('chat-image-preview');
+        if (imageInput) imageInput.value='';
+        if (preview) { preview.style.display='none'; preview.innerText=''; }
+        renderChatMessages();
+      });
+    }
+
+    function deleteGlobalChatMessage(messageId) {
+      if (!currentUser || !['CIA CHIEF','SUPREME COMMANDER'].includes(normalizeRank(currentUser.rank))) return;
+      if (!confirm('حذف هذه الرسالة من الشات العام نهائياً؟')) return;
+      ciaSocket.emit('chat:delete', { messageId }, function(result) {
+        if (!result || !result.ok) alert((result && result.message) || 'تعذر حذف الرسالة.');
+      });
+    }
+
+    function renderChatMessages() {
+      const box = document.getElementById('chat-messages-box');
+      if (!box) return;
+      const privSel = document.getElementById('private-user-select');
+      const targetCode = privSel ? privSel.value : '';
+      const allGlobal = Array.isArray(chatMessages.global) ? chatMessages.global : [];
+      let filtered = [];
+      if (activeChatMode === 'global') filtered = allGlobal;
+      else if (activeChatMode === 'private' && currentUser && targetCode) {
+        const key = chatConversationKey(currentUser.publicCode, targetCode);
+        const privateMap = chatMessages.private || {};
+        filtered = Array.isArray(privateMap[key]) ? privateMap[key] : [];
+      }
+      const leadership = currentUser && ['CIA CHIEF','SUPREME COMMANDER'].includes(normalizeRank(currentUser.rank));
+      box.innerHTML = filtered.map(m => `
+        <div class="msg-card">
+          <div style="display:flex;justify-content:space-between;gap:8px;font-weight:bold;font-size:.75rem;color:var(--cyan-glow);">
+            <span>#${esc(m.senderCode)}${m.senderName ? ' ('+esc(m.senderName)+')' : ''}</span>
+            <span style="color:var(--text-dim);font-size:.65rem;">${esc(m.timestamp || '')}</span>
+          </div>
+          ${m.text ? `<div style="margin-top:4px;color:var(--text-bright);white-space:pre-wrap;">${esc(m.text)}</div>` : ''}
+          ${m.image ? `<img src="${esc(m.image)}" style="max-width:100%;max-height:260px;border-radius:6px;margin-top:7px;border:1px solid var(--border);">` : ''}
+          ${activeChatMode === 'private' ? (leadership ? `<button type="button" onclick="deletePrivateChatMessageAdmin('${esc(m.id)}')" style="margin-top:6px;background:transparent;border:1px solid var(--red-alert);color:var(--red-alert);padding:3px 7px;border-radius:3px;cursor:pointer;font-size:.65rem;">حذف نهائي للقيادة</button>` : `<button type="button" onclick="deletePrivateChatMessage('${esc(m.id)}')" style="margin-top:6px;background:transparent;border:1px solid var(--text-dim);color:var(--text-dim);padding:3px 7px;border-radius:3px;cursor:pointer;font-size:.65rem;">حذف من جهتي</button>`) : ''}
+          ${activeChatMode === 'global' && leadership ? `<button type="button" onclick="deleteGlobalChatMessage('${esc(m.id)}')" style="margin-top:6px;background:transparent;border:1px solid var(--red-alert);color:var(--red-alert);padding:3px 7px;border-radius:3px;cursor:pointer;font-size:.65rem;">حذف الرسالة</button>` : ''}
+        </div>
+      `).join('') || '<div class="identity-meta" style="padding:12px;text-align:center;">لا توجد رسائل محفوظة.</div>';
+      box.scrollTop = box.scrollHeight;
+      renderLeadershipSecureChats();
+    }
+
+    function renderLeadershipSecureChats() {
+      const panel = document.getElementById('leadership-secure-chat-panel');
+      const box = document.getElementById('leadership-secure-chat-box');
+      if (!panel || !box) return;
+      const leadership = currentUser && ['CIA CHIEF','SUPREME COMMANDER'].includes(normalizeRank(currentUser.rank));
+      if (!leadership) { panel.style.display = 'none'; return; }
+      panel.style.display = 'block';
+      const privateMap = chatMessages.private || {};
+      const rows = [];
+      Object.values(privateMap).forEach(messages => (Array.isArray(messages) ? messages : []).forEach(m => rows.push(m)));
+      rows.sort((a,b) => String(a.timestamp || '').localeCompare(String(b.timestamp || '')));
+      box.innerHTML = rows.slice(-300).map(m => `
+        <div class="msg-card" style="border-right:2px solid var(--red-alert);margin-bottom:6px;">
+          <div style="font-size:.7rem;color:var(--primary-gold);">#${esc(m.senderCode)}${m.senderName ? ' '+esc(m.senderName) : ''} → #${esc(m.targetCode || '')}</div>
+          ${m.text ? `<div style="font-size:.78rem;color:var(--text-bright);margin-top:3px;white-space:pre-wrap;">${esc(m.text)}</div>` : ''}
+          ${m.image ? `<img src="${esc(m.image)}" style="max-width:100%;max-height:260px;border-radius:6px;margin-top:6px;border:1px solid var(--border);">` : ''}
+          <div style="font-size:.6rem;color:var(--text-dim);margin-top:3px;">${esc(m.timestamp || '')}</div>
+          <button type="button" onclick="deletePrivateChatMessageAdmin('${esc(m.id)}')" style="margin-top:5px;background:transparent;border:1px solid var(--red-alert);color:var(--red-alert);padding:3px 7px;border-radius:3px;cursor:pointer;font-size:.62rem;">حذف نهائي</button>
+        </div>
+      `).join('') || '<div class="identity-meta" style="padding:12px;text-align:center;">لا توجد رسائل مشفرة محفوظة.</div>';
+    }
+
+    /* Reports System */
+    function handleImageUpload(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          uploadedImageBase64 = e.target.result;
+          alert('تم تحميل الصورة بنجاح.');
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function submitReport() {
+      const title = document.getElementById('report-title').value.trim();
+      const body = document.getElementById('report-body').value.trim();
+      const imgUrl = document.getElementById('report-img-url').value.trim();
+      const isSecret = document.getElementById('report-is-secret').checked;
+      if (!currentUser || !ciaSocket || !ciaSocket.connected) { alert('يجب تسجيل الدخول أولاً.'); return; }
+      if (!title || !body) { alert('الرجاء كتابة عنوان التقرير والتفاصيل.'); return; }
+      ciaSocket.emit('report:create', {
+        title, body, img: uploadedImageBase64 || imgUrl, isSecret
+      }, function(result) {
+        if (!result || !result.ok) { alert((result && result.message) || 'تعذر حفظ التقرير.'); return; }
+        document.getElementById('report-title').value = '';
+        document.getElementById('report-body').value = '';
+        document.getElementById('report-img-url').value = '';
+        document.getElementById('report-is-secret').checked = false;
+        uploadedImageBase64 = '';
+        renderReportsList();
+        alert('تم حفظ التقرير على السيرفر.');
+      });
+    }
+
+    function deleteReport(reportId) {
+      if (!currentUser || !['CIA CHIEF','SUPREME COMMANDER'].includes(normalizeRank(currentUser.rank))) return;
+      if (!confirm('حذف التقرير نهائياً من السجل المحفوظ؟')) return;
+      ciaSocket.emit('report:delete', { id: reportId }, function(result) {
+        if (!result || !result.ok) alert((result && result.message) || 'تعذر حذف التقرير.');
+      });
+    }
+
+    function renderReportsList() {
+      const box = document.getElementById('reports-list-box');
+      if (!box) return;
+      const leadership = currentUser && ['CIA CHIEF','SUPREME COMMANDER'].includes(normalizeRank(currentUser.rank));
+      const visible = (reportsList || []).filter(r => !r.isSecret || leadership);
+      if (visible.length === 0) {
+        box.innerHTML = '<div style="color:var(--text-dim);font-size:.8rem;text-align:center;padding:10px;">لا توجد تقارير حالياً.</div>';
+        return;
+      }
+      box.innerHTML = visible.map(r => `
+        <div class="card" style="${r.isSecret ? 'border-color:var(--red-alert);background:rgba(239,68,68,0.05);' : ''}">
+          <div style="display:flex;justify-content:space-between;font-weight:bold;color:var(--primary-gold);font-size:.85rem;">
+            <span>${r.isSecret ? '🔒 [سري للغاية] ' : ''}${esc(r.title)}</span>
+            <span style="color:var(--text-dim);font-size:.7rem;">${esc(r.date || r.createdAt || '')}</span>
+          </div>
+          <div style="font-size:.75rem;color:var(--cyan-glow);margin:3px 0;">المرسل: #${esc(r.code || '')} (${esc(r.author || '')})</div>
+          <p style="font-size:.8rem;color:var(--text-bright);line-height:1.5;margin-top:5px;white-space:pre-wrap;">${esc(r.body)}</p>
+          ${r.img ? `<img src="${esc(r.img)}" style="max-width:100%;max-height:200px;border-radius:6px;margin-top:8px;border:1px solid var(--border);">` : ''}
+          ${leadership ? `<button type="button" onclick="deleteReport('${esc(r.id)}')" style="margin-top:7px;padding:4px 8px;background:transparent;border:1px solid var(--red-alert);color:var(--red-alert);border-radius:4px;cursor:pointer;">حذف التقرير</button>` : ''}
+        </div>
+      `).join('');
+    }
+
+    /* SOS System */
+    function openSOSModal() {
+      document.getElementById('sos-input-modal').style.display = 'flex';
+    }
+
+    function closeSOSModal() {
+      document.getElementById('sos-input-modal').style.display = 'none';
+    }
+
+    function confirmAndSendSOS() {
+      const loc = document.getElementById('sos-location-input').value.trim();
+      const count = document.getElementById('sos-count-input').value.trim();
+      const status = document.getElementById('sos-status-input').value;
+      const note = document.getElementById('sos-note-input').value.trim();
+      if (!currentUser || !ciaSocket || !ciaSocket.connected) { alert('يجب تسجيل الدخول والاتصال بالسيرفر لإرسال S.O.S.'); return; }
+      if (!loc) { alert('يرجى تحديد الموقع.'); return; }
+
+      ciaSocket.emit('sos:broadcast', { location:loc, count:count || 'غير محدد', status, note }, function(result) {
+        if (!result || !result.ok) { alert((result && result.message) || 'تعذر إرسال بلاغ S.O.S.'); return; }
+        closeSOSModal();
+        document.getElementById('sos-location-input').value='';
+        document.getElementById('sos-count-input').value='';
+        document.getElementById('sos-note-input').value='';
+        renderSOSAlerts();
+      });
+    }
+
+    function formatSOSDate(value) {
+      try { return new Date(value).toLocaleString('ar-JO', {dateStyle:'short', timeStyle:'medium'}); } catch(e) { return value || ''; }
+    }
+
+    function renderSOSAlerts() {
+      const list=document.getElementById('sos-alerts-list');
+      const countEl=document.getElementById('dashboard-alert-count');
+      const preview=document.getElementById('dashboard-alert-preview');
+      if(!list && !preview) return;
+      const leadership=currentUser && ['CIA CHIEF','SUPREME COMMANDER'].includes(normalizeRank(currentUser.rank));
+      const rows=Array.isArray(sosAlerts)?sosAlerts:[];
+      if(countEl) countEl.textContent=String(rows.length);
+      if(preview){
+        const latest=rows[0];
+        preview.innerHTML=latest
+          ? `<strong style="color:var(--red-alert);">S.O.S #${esc(latest.id||'')} — ${esc(latest.location||'موقع غير محدد')}</strong><br><span>${esc(latest.fromCode ? '#'+latest.fromCode : 'غير محدد')} • ${esc(latest.status||'غير محدد')}</span>`
+          : 'لا توجد بلاغات S.O.S حالياً.';
+      }
+      if(!list) return;
+      list.innerHTML=rows.map(a=>`
+        <div class="sos-list-card">
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+            <strong style="color:var(--red-alert);font-size:.8rem;">S.O.S #${esc(a.id || '')}</strong>
+            <span style="color:var(--text-dim);font-size:.62rem;">${esc(formatSOSDate(a.at))}</span>
+          </div>
+          <div class="sos-meta">المرسل: #${esc(a.fromCode || '')}<br>الرتبة: ${esc(a.fromRank || 'AGENT')}<br>الموقع: ${esc(a.location || 'غير محدد')}<br>عدد الأفراد: ${esc(a.count || 'غير محدد')}<br>حالة الخطر: ${esc(a.status || 'غير محدد')}</div>
+          ${a.note ? `<div class="sos-main">${esc(a.note)}</div>` : ''}
+          ${leadership ? `<button type="button" onclick="deleteSOSAlert('${esc(a.id)}')" style="margin-top:7px;background:transparent;border:1px solid var(--red-alert);color:var(--red-alert);padding:4px 8px;border-radius:4px;cursor:pointer;font-size:.65rem;">حذف البلاغ</button>` : ''}
+        </div>`).join('') || '<div class="identity-meta" style="padding:15px;text-align:center;">لا توجد بلاغات S.O.S محفوظة.</div>';
+    }
+
+    function deleteSOSAlert(id) {
+      if(!currentUser || !['CIA CHIEF','SUPREME COMMANDER'].includes(normalizeRank(currentUser.rank))) return;
+      if(!confirm('حذف بلاغ S.O.S نهائياً؟')) return;
+      ciaSocket.emit('sos:delete',{id},function(result){
+        if(!result || !result.ok) alert((result && result.message) || 'تعذر حذف البلاغ.');
+      });
+    }
+
+    function showRedScreenSOS(alert) {
+      const banner=document.getElementById('sos-screen-banner');
+      const content=document.getElementById('sos-banner-content');
+      const timerTag=document.getElementById('sos-timer-tag');
+      if(!banner) return;
+      const text=`المرسل: #${alert.fromCode || 'غير محدد'}
+الرتبة: ${alert.fromRank || 'غير محددة'}
+الموقع: ${alert.location || 'غير محدد'}
+عدد الأفراد: ${alert.count || 'غير محدد'}
+حالة الخطر: ${alert.status || 'غير محدد'}
+وقت البلاغ: ${formatSOSDate(alert.at)}${alert.note ? `\nالمعلومات الإضافية: ${alert.note}` : ''}`;
+      if(content) content.innerText=text;
+      banner.style.display='flex';
+      playRadioBeep(1500);
+      clearTimeout(sosTimer);
+      if(window.sosCountdownTimer) clearInterval(window.sosCountdownTimer);
+      let remaining=30;
+      if(timerTag) timerTag.textContent=`يختفي تلقائياً خلال ${remaining} ثانية`;
+      window.sosCountdownTimer=setInterval(()=>{
+        remaining--;
+        if(timerTag) timerTag.textContent=remaining>0?`يختفي تلقائياً خلال ${remaining} ثانية`:'جارٍ إغلاق التنبيه...';
+        if(remaining<=0) clearInterval(window.sosCountdownTimer);
+      },1000);
+      sosTimer=setTimeout(dismissSOSBanner,30000);
+    }
+
+    function dismissSOSBanner() {
+      const banner=document.getElementById('sos-screen-banner');
+      if(banner) banner.style.display='none';
+      clearTimeout(sosTimer);
+      if(window.sosCountdownTimer) { clearInterval(window.sosCountdownTimer); window.sosCountdownTimer=null; }
+    }
+
+    /* Chief Panel Admin Functions */
+    function renderChiefPanel() {
+      if (!currentUser || !['CIA CHIEF','SUPREME COMMANDER','HIGH COMMANDER'].includes(normalizeRank(currentUser.rank))) return;
+      const isChief = currentUser.rank === 'CIA CHIEF';
+      const admissionsBox = document.getElementById('chief-only-admissions');
+      const charactersBox = document.getElementById('chief-only-characters');
+      if (admissionsBox) admissionsBox.style.display = isChief ? 'block' : 'none';
+      if (charactersBox) charactersBox.style.display = isChief ? 'block' : 'none';
+
+      // Pending Queue
+      const pendingList = document.getElementById('pending-queue-list');
+      if (pendingList) {
+        pendingList.innerHTML = pendingQueue.length === 0 ? 
+          '<tr><td colspan="3" style="text-align:center; color:var(--text-dim);">لا توجد طلبات معلقة</td></tr>' :
+          pendingQueue.map(q => `
+            <tr>
+              <td>${esc(q.name)}</td>
+              <td>#${esc(q.publicCode)}</td>
+              <td>
+                <button onclick="approveMember('${esc(q.id)}')" style="padding:4px 8px; background:var(--green-status); color:#000; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">قبول</button>
+                <button onclick="rejectMember('${esc(q.id)}')" style="padding:4px 8px; background:var(--red-alert); color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">رفض</button>
+              </td>
+            </tr>
+          `).join('');
+      }
+
+      // Pending Characters
+      const charList = document.getElementById('character-request-queue-list');
+      if (charList) {
+        charList.innerHTML = pendingCharacterQueue.length === 0 ?
+          '<tr><td colspan="3" style="text-align:center; color:var(--text-dim);">لا توجد طلبات شخصيات معلقة</td></tr>' :
+          pendingCharacterQueue.map(c => `
+            <tr>
+              <td>${esc(c.ownerName)}</td>
+              <td>${esc(c.requestedName)}</td>
+              <td>
+                <button onclick="approveCharacterReq('${esc(c.id)}')" style="padding:4px 8px; background:var(--green-status); color:#000; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">قبول</button>
+                <button onclick="rejectCharacterReq('${esc(c.id)}')" style="padding:4px 8px; background:var(--red-alert); color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">رفض</button>
+              </td>
+            </tr>
+          `).join('');
+      }
+
+      // Members Admin List — CIA CHIEF + Senior Commander CIA
+      const membersList = document.getElementById('chief-members-list');
+      if (membersList) {
+        membersList.innerHTML = registeredUsers.map((u, index) => {
+          if (u.rank === 'CIA CHIEF') return `<tr><td style="font-weight:bold;color:var(--cyan-glow);">#${esc(u.publicCode)}</td><td>${esc(u.name)}</td><td><span class="badge-rank rank-chief">CIA CHIEF</span></td><td>${u.online ? '<span class="presence-online">متصل</span>' : '<span class="presence-offline">غير متصل</span>'}</td><td>—</td></tr>`;
+          const normalizedRank = normalizeRank(u.rank);
+          const canEditPublic = ['CIA CHIEF','SUPREME COMMANDER','HIGH COMMANDER'].includes(normalizeRank(currentUser?.rank)); const canEditSecret = ['CIA CHIEF','SUPREME COMMANDER'].includes(normalizeRank(currentUser?.rank)); const editCodeBtn = (canEditSecret || canEditPublic) && normalizedRank !== 'CIA CHIEF' ? `${canEditSecret ? `<button onclick="editLoginCode(${index})" style="padding:3px 6px;background:var(--primary-gold);color:#000;font-weight:bold;border:none;cursor:pointer;border-radius:3px;">كود الدخول</button>` : ''}${canEditPublic ? `<button onclick="editPublicCode(${index})" style="padding:3px 6px;background:#111827;color:var(--primary-gold);font-weight:bold;border:1px solid var(--primary-gold);cursor:pointer;border-radius:3px;margin-right:3px;">الكود العسكري</button>` : ''}` : '';
+          return `<tr><td style="font-weight:bold;color:var(--cyan-glow);">#${esc(u.publicCode)}</td><td>${esc(u.name)}</td><td><span class="badge-rank ${getRankBadge(normalizedRank)}">${esc(getRankLabel(normalizedRank))}</span></td><td>${u.online ? '<span class="presence-online">متصل</span>' : '<span class="presence-offline">غير متصل</span>'}</td><td>${editCodeBtn} ${u.status === 'مفصول' ? `<button onclick="reactivateMember(${index})" style="padding:3px 6px;background:var(--green-status);color:#000;font-weight:bold;border:none;cursor:pointer;border-radius:3px;">إعادة للخدمة</button>` : `<button onclick="manageRank(${index})" style="padding:3px 6px;background:var(--cyan-glow);color:#000;font-weight:bold;border:none;cursor:pointer;border-radius:3px;">ترقية / تنزيل</button> <button onclick="kickMember(${index})" style="padding:3px 6px;background:var(--red-alert);color:#fff;border:none;cursor:pointer;border-radius:3px;">فصل</button>`}</td></tr>`;
+        }).join('');
+      }
+
+      // Public & Private Identities Admin
+      const chiefPublicList = document.getElementById('chief-public-identity-list');
+      if (chiefPublicList) {
+        chiefPublicList.innerHTML = registeredUsers.map(u => {
+          const id = u.identity || {};
+          return `
+            <div class="identity-card" style="margin-top:8px;">
+              <div class="identity-code">#${esc(u.publicCode)} - ${esc(u.name)} (${esc(u.rank)})</div>
+              <div class="identity-meta">
+                الاسم الكامل: ${esc(id.fullName || 'غير مسجل')}<br>
+                تاريخ الميلاد: ${esc(id.birthDate || 'غير مسجل')}<br>
+                الجنسية: ${esc(id.nationality || 'غير مسجل')}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const privateList = document.getElementById('private-leadership-identity-list');
+      if (privateList) {
+        privateList.innerHTML = registeredUsers.map(u => {
+          const id = u.identity || {};
+          return `
+            <div class="identity-card identity-private" style="margin-top:8px;">
+              <div class="identity-code">🔒 #${esc(u.publicCode)} - ${esc(u.name)} (${esc(getRankLabel(u.rank))})</div>
+              <div class="identity-meta">
+                الاسم الكامل: ${esc(id.fullName || 'سرية للغاية')}<br>
+                تاريخ الميلاد: ${esc(id.birthDate || 'غير مسجل')}<br>
+                الجنسية: ${esc(id.nationality || 'غير مسجل')}<br>
+                الطول: ${esc(id.height || 'غير محدد')}<br>
+                فصيلة الدم: ${esc(id.bloodType || 'غير محدد')}<br>
+                الوظيفة/التخصص: ${esc(id.occupation || 'غير محدد')}<br>
+                ملاحظات: ${esc(id.notes || 'لا يوجد')}
+              </div>
+            </div>
+          `;
+        }).join('') || '<div class="identity-meta">لا توجد هويات سرية مسجلة.</div>';
+      }
+    }
+
+    function approveMember(reqId) {
+      if (!ciaSocket || !currentUser || normalizeRank(currentUser.rank) !== 'CIA CHIEF') return;
+      const publicCode = prompt('حدد كود الظهور العام لهذا العضو (يظهر للجميع):');
+      if (publicCode === null) return;
+      const code = publicCode.trim();
+      if (!code || code === 'PENDING') { alert('كود الظهور مطلوب.'); return; }
+      ciaSocket.emit('admin:action', { action: 'approve', requestId: reqId, publicCode: code }, function(result) {
+        if (!result || !result.ok) alert((result && result.message) || 'تعذر قبول العضو.');
+      });
+    }
+
+    function rejectMember(reqId) {
+      if (ciaSocket) ciaSocket.emit('admin:action', { action: 'reject', requestId: reqId });
+    }
+
+    function approveCharacterReq(reqId) {
+      if (!ciaSocket || !currentUser || normalizeRank(currentUser.rank) !== 'CIA CHIEF') return;
+      const publicCode = prompt('حدد كود الظهور العام لهذه الشخصية:');
+      if (publicCode === null) return;
+      const code = publicCode.trim();
+      if (!code || code === 'PENDING') { alert('كود الظهور مطلوب.'); return; }
+      ciaSocket.emit('character:admin:action', { action: 'approve', requestId: reqId, publicCode: code }, function(result) {
+        if (!result || !result.ok) alert((result && result.message) || 'تعذر قبول الشخصية.');
+      });
+    }
+
+    function rejectCharacterReq(reqId) {
+      if (ciaSocket) ciaSocket.emit('character:admin:action', { action: 'reject', requestId: reqId });
+    }
+
+    function normalizeRank(rank) {
+      if (rank === 'AGENT' || rank === 'Agent') return 'AGENT';
+      if (rank === 'HIGH COMMANDER' || rank === 'High Commander') return 'HIGH COMMANDER';
+      if (rank === 'SUPREME COMMANDER' || rank === 'Senior Commander CIA') return 'SUPREME COMMANDER';
+      return rank;
+    }
+
+    function getRankLabel(rank) {
+      rank = normalizeRank(rank);
+      if (rank === 'CIA CHIEF') return 'CIA CHIEF';
+      if (rank === 'HIGH COMMANDER') return 'High Commander';
+      if (rank === 'SUPREME COMMANDER') return 'Senior Commander CIA';
+      return 'Agent';
+    }
+
+    function getRankBadge(rank) {
+      rank = normalizeRank(rank);
+      if (rank === 'CIA CHIEF') return 'rank-chief';
+      if (rank === 'SUPREME COMMANDER') return 'rank-supreme';
+      if (rank === 'HIGH COMMANDER') return 'rank-high';
+      return 'rank-agent';
+    }
+
+    function manageRank(index) {
+      if (!currentUser || !['CIA CHIEF','SUPREME COMMANDER'].includes(normalizeRank(currentUser.rank))) return;
+      const member = registeredUsers[index];
+      if (!member || normalizeRank(member.rank) === 'CIA CHIEF') return;
+      const choice = prompt(`إدارة رتبة ${member.name}:\n\n1 = Agent\n2 = High Commander\n3 = Senior Commander CIA\n\nاكتب رقم الرتبة المطلوبة:`);
+      const map = {'1':'AGENT','2':'HIGH COMMANDER','3':'SUPREME COMMANDER'};
+      const newRank = map[choice];
+      if (!newRank) return;
+      if (normalizeRank(member.rank) === newRank) { alert('العضو موجود بالفعل على هذه الرتبة.'); return; }
+      if (newRank === 'SUPREME COMMANDER' && !confirm(`هل أنت متأكد من وضع ${member.name} في منصب Senior Commander CIA؟\n\nهذا المنصب يمنحه صلاحيات قيادية محدودة.`)) return;
+      if (!ciaSocket || !ciaSocket.connected) { alert('الاتصال بالسيرفر غير متاح.'); return; }
+      ciaSocket.emit('admin:updateMember', { memberId: member.id, rank: newRank });
+    }
+
+    function changeRank(index, newRank) {
+      const map = {'Agent':'AGENT','High Commander':'HIGH COMMANDER','SUPREME COMMANDER':'SUPREME COMMANDER','Senior Commander CIA':'SUPREME COMMANDER'};
+      return manageRank(index);
+    }
+
+    function editLoginCode(index) {
+      if (!currentUser || !['CIA CHIEF','SUPREME COMMANDER'].includes(normalizeRank(currentUser.rank))) { alert('تغيير الأكواد متاح لـ CIA CHIEF و Senior Commander CIA فقط.'); return; }
+      const member = registeredUsers[index];
+      if (!member || normalizeRank(member.rank) === 'CIA CHIEF') return;
+      const newCode = prompt(`أدخل كود الدخول الجديد لـ ${member.name}:`);
+      if (!newCode) return;
+      const code = newCode.trim();
+      if (code.length < 4) { alert('الكود يجب أن يكون 4 أحرف/أرقام على الأقل.'); return; }
+      ciaSocket.emit('admin:updateMember', { memberId: member.id, secretCode: code }, function(result) {
+        if (!result || !result.ok) alert((result && result.message) || 'تعذر تغيير كود الدخول.');
+      });
+    }
+
+    function editPublicCode(index) {
+      if (!currentUser || !['CIA CHIEF','SUPREME COMMANDER','HIGH COMMANDER'].includes(normalizeRank(currentUser.rank))) { alert('تغيير الكود العسكري متاح للقيادة وHigh Commander ضمن صلاحياته.'); return; }
+      const member = registeredUsers[index];
+      if (!member || normalizeRank(member.rank) === 'CIA CHIEF') return;
+      const newCode = prompt(`أدخل الكود العسكري/العلني الجديد لـ ${member.name}:`, member.publicCode || '');
+      if (newCode === null) return;
+      const code = newCode.trim();
+      if (!code || code === 'PENDING') { alert('اكتب كوداً صالحاً.'); return; }
+      ciaSocket.emit('admin:updateMember', { memberId: member.id, publicCode: code }, function(result) {
+        if (!result || !result.ok) alert((result && result.message) || 'تعذر تغيير الكود العسكري.');
+      });
+    }
+
+    function reactivateMember(index) {
+      if (!currentUser || !['CIA CHIEF','SUPREME COMMANDER','HIGH COMMANDER'].includes(normalizeRank(currentUser.rank))) return;
+      const member = registeredUsers[index];
+      if (!member) return;
+      ciaSocket.emit('admin:reactivateMember', { memberId: member.id }, function(result) {
+        if (!result || !result.ok) alert((result && result.message) || 'تعذر إعادة العضو للخدمة.');
+      });
+    }
+
+    function kickMember(index) {
+      if (!currentUser || !['CIA CHIEF','SUPREME COMMANDER','HIGH COMMANDER'].includes(normalizeRank(currentUser.rank))) return;
+      const member = registeredUsers[index];
+      if (!member || normalizeRank(member.rank) === 'CIA CHIEF') return;
+      if (!confirm(`هل أنت متأكد من فصل ${member.name}؟\n\nلن تُحذف بياناته أو شخصياته؛ سيتم وضعه في حالة «مفصول» وإيقاف دخوله فقط.`)) return;
+      if (!ciaSocket || !ciaSocket.connected) { alert('الاتصال بالسيرفر غير متاح.'); return; }
+      ciaSocket.emit('admin:kickMember', { memberId: member.id });
+    }
+
+    function kickUser(userId) {
+      if (confirm('هل أنت تأكد من طرد هذا الحساب وإنهاء صلاحياته؟')) {
+        if (ciaSocket) ciaSocket.emit('admin:kickUser', { userId });
+      }
+    }
+
+    function changeOwnSecretCode() {
+      const newCode = prompt('أدخل كود الدخول الشخصي الجديد:');
+      if (newCode && newCode.trim().length >= 4) {
+        ciaSocket.emit('admin:updateSelf', { secretCode: newCode.trim() }, function(result) {
+          if (!result || !result.ok) alert((result && result.message) || 'تعذر تغيير كود الدخول.');
+        });
+      } else if (newCode) alert('الكود يجب أن يكون 4 أحرف/أرقام على الأقل.');
+    }
+
+    function changeOwnPublicCode() {
+      const newCode = prompt('أدخل الكود العسكري/العلني الشخصي الجديد:', currentUser ? currentUser.publicCode : '');
+      if (newCode === null) return;
+      if (!newCode.trim()) { alert('الكود لا يمكن أن يكون فارغاً.'); return; }
+      ciaSocket.emit('admin:updateSelf', { publicCode: newCode.trim() }, function(result) {
+        if (!result || !result.ok) alert((result && result.message) || 'تعذر تغيير الكود العسكري.');
+      });
+    }
+
+    function openChiefHandover(){
+      if(normalizeRank(currentUser?.rank)!=='CIA CHIEF') return;
+      if(!confirm('سيتم فتح نافذة تسليم القيادة لمدة 15 دقيقة. هل أنت متأكد؟')) return;
+      ciaSocket.emit('leader:handover',{confirmation:'TRANSFER'},r=>{ if(!r||!r.ok) return alert((r&&r.message)||'تعذر فتح تسليم القيادة.'); alert('تم فتح تسليم القيادة. الشخص الجديد يجب أن ينشئ CIA CHIEF من البداية عبر مسار القيادة.'); });
+    }
+
+    function changeOwnHobbies() {
+      const h = prompt('أدخل البيانات/الملاحظات القيادية الإضافية:');
+      if (h !== null && ciaSocket) {
+        ciaSocket.emit('admin:updateChiefProfile', { hobbies: h.trim() });
+      }
+    }
+
+    function changeOwnLeaderData() {
+      const name = prompt('تعديل اسم القائد الحالي:', currentUser ? currentUser.name : '');
+      if (name && name.trim() && ciaSocket) {
+        ciaSocket.emit('leader:updateProfile', { name: name.trim() });
+      }
+    }
+  </script>
+</body>
+</html>
